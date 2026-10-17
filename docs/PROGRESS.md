@@ -55,7 +55,7 @@ The approved Multi-machine amendment is in `docs\PHASE-2-ARCHITECTURE.md`. The w
 
 ### M6 — Máy thật và đánh giá
 
-- README tiếng Việt đã hoàn thiện: bootstrap một dòng có hỏi Git URL, dùng Codex/Antigravity, cấu hình vault theo từng máy, thêm dự án/skill, đồng bộ vault, chẩn đoán và gỡ cài.
+- README tiếng Việt đã hoàn thiện: bootstrap một dòng dùng remote chính thức đã được người dùng cung cấp, cài và cấu hình, tham số lệnh, dùng từng nhóm skill, thêm dự án/skill, đồng bộ vault, chẩn đoán/gỡ cài và bảng xử lý sự cố. Nội dung được mở rộng sau khi remote được xác nhận.
 - DryRun trên hồ sơ hiện tại được ghi tại `docs\INSTALL-DRYRUN.log`. Kết quả: config chưa tồn tại; phát hiện Codex và Antigravity; không thấy Obsidian vault khớp `DevBrain`, chọn `.context`; MCP tắt. DryRun xác nhận không ghi file/link/backup/cấu hình. Codex `AGENTS.md` được lên kế hoạch backup trước khi sửa. PowerShell 7 chưa có; các script đã kiểm chứng dưới Windows PowerShell 5.1.
 - `docs\EVAL.md` ghi ba cặp tác vụ trên fixture, số lần đọc/công cụ và ước lượng token theo ký tự/4. Trên fixture nhỏ, note bootstrap sơ bộ khiến tổng tài liệu đọc tăng 305 lên 2.044 token ước lượng và thêm một lần đọc; không khẳng định tiết kiệm trước khi thử repo nhiều module với note đã được rà soát.
 - Kiểm chứng giả lập M1–M5 chạy đạt trên ba profile máy; bootstrap/install dry-run, cài lặp idempotent, doctor và uninstall phục hồi baseline. Không thực hiện cài đặt thật lên hồ sơ Windows theo điểm dừng bắt buộc; đang chờ người dùng duyệt log DryRun.

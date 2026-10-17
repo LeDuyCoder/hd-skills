@@ -46,6 +46,6 @@ This file records reversible implementation choices that resolve details not ful
 
 ## D-008 — Fresh bootstrap accepts a repository URL instead of inventing one
 
-- Decision: when no local checkout or `HD_SKILL_HOME` Git remote exists, `bootstrap.ps1` requires `-RepositoryUrl`. The copyable README command prompts for the Git URL at run time.
-- Reason: this workspace has no configured Git origin, and inventing a public repository URL could send users to the wrong source.
-- Reversal: set the default URL after the project has a confirmed shared remote; local bootstrap remains available for tests and existing checkouts.
+- Decision: when there is no local checkout or configured `HD_SKILL_HOME` Git remote, `bootstrap.ps1` needs `-RepositoryUrl`. The README uses the repository owner-provided remote `https://github.com/LeDuyCoder/hs-skills.git`.
+- Reason: the workspace had no origin when the initial bootstrap was implemented; the repository owner has since supplied the canonical URL, so new users can paste a ready-to-run command.
+- Reversal: change the README URL if the owner moves the repository; local bootstrap remains available for tests and existing checkouts.
