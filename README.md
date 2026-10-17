@@ -7,7 +7,7 @@
 [![PowerShell](https://img.shields.io/badge/PowerShell-5.1%2B-5391FE?logo=powershell&logoColor=white)](https://learn.microsoft.com/powershell/)
 [![Codex](https://img.shields.io/badge/Agent-Codex-111111)](https://github.com/openai/codex)
 [![Antigravity](https://img.shields.io/badge/Agent-Antigravity-4285F4)](https://antigravity.google/)
-[![Repo](https://img.shields.io/badge/GitHub-LeDuyCoder%2Fhs--skills-181717?logo=github&logoColor=white)](https://github.com/LeDuyCoder/hs-skills)
+[![Repo](https://img.shields.io/badge/GitHub-LeDuyCoder%2Fhs--skills-181717?logo=github&logoColor=white)](https://github.com/LeDuyCoder/hd-skills)
 
 `hd-skill` là bộ skill dùng chung cho Codex và Google Antigravity trên Windows. Repo chứa skill, rules, mẫu note và script; cấu hình riêng của máy nằm ở `%USERPROFILE%\.hd-skill\config.json`. Repo không chứa đường dẫn vault của một máy cụ thể.
 
@@ -54,7 +54,7 @@ Cần Git for Windows và Windows PowerShell 5.1 trở lên; PowerShell 7 đư�
 Mở PowerShell **trong thư mục dự án** rồi chạy:
 
 ```powershell
-irm https://raw.githubusercontent.com/LeDuyCoder/hs-skills/master/get.ps1 | iex
+irm https://raw.githubusercontent.com/LeDuyCoder/hd-skills/master/get.ps1 | iex
 ```
 
 Lệnh hỏi nơi cài:
@@ -70,11 +70,11 @@ Chọn sẵn, không hỏi (dùng cho script/CI):
 
 ```powershell
 # Cách 1: biến môi trường
-$env:HD_SKILL_SCOPE = 'Project'; irm https://raw.githubusercontent.com/LeDuyCoder/hs-skills/master/get.ps1 | iex
+$env:HD_SKILL_SCOPE = 'Project'; irm https://raw.githubusercontent.com/LeDuyCoder/hd-skills/master/get.ps1 | iex
 
 # Cách 2: truyền tham số (-Scope Global|Project, -DryRun, -Uninstall, -ProjectPath, -VaultPath, -WithMcp, -NonInteractive)
-& ([scriptblock]::Create((irm https://raw.githubusercontent.com/LeDuyCoder/hs-skills/master/get.ps1))) -Scope Project -DryRun
-& ([scriptblock]::Create((irm https://raw.githubusercontent.com/LeDuyCoder/hs-skills/master/get.ps1))) -Scope Project -Uninstall
+& ([scriptblock]::Create((irm https://raw.githubusercontent.com/LeDuyCoder/hd-skills/master/get.ps1))) -Scope Project -DryRun
+& ([scriptblock]::Create((irm https://raw.githubusercontent.com/LeDuyCoder/hd-skills/master/get.ps1))) -Scope Project -Uninstall
 ```
 
 `get.ps1` clone repo vào `%USERPROFILE%\.hd-skill\repo`, hoặc pull nếu đã có. Với `Global`, script chuyển cho `bootstrap.ps1`; với `Project`, script chạy `install-project.ps1`. Dùng `-DryRun` để chỉ xem kế hoạch; lúc này repo được clone vào thư mục tạm rồi xóa. Từ một checkout có sẵn có thể gọi trực tiếp `& .\install-project.ps1 -ProjectPath <dự án> -Apply`; thêm `-Uninstall` để gỡ.
@@ -373,8 +373,8 @@ Không có bước nào tự cài phần mềm. MCP filesystem là tuỳ chọn 
 
 | Triệu chứng | Kiểm tra và cách xử lý |
 |---|---|
-| `git clone` yêu cầu đăng nhập hoặc bị từ chối | Kiểm tra URL `https://github.com/LeDuyCoder/hs-skills.git`, quyền GitHub của tài khoản, kết nối mạng và Git Credential Manager. Không đặt token trực tiếp trong URL hoặc README. |
-| `bootstrap.ps1` báo thiếu `-RepositoryUrl` | Chạy từ checkout hiện tại hoặc truyền `-RepositoryUrl 'https://github.com/LeDuyCoder/hs-skills.git'`. Nếu thư mục đích đã tồn tại, xác nhận đó là Git checkout đúng trước khi chạy lại. |
+| `git clone` yêu cầu đăng nhập hoặc bị từ chối | Kiểm tra URL `https://github.com/LeDuyCoder/hd-skills.git`, quyền GitHub của tài khoản, kết nối mạng và Git Credential Manager. Không đặt token trực tiếp trong URL hoặc README. |
+| `bootstrap.ps1` báo thiếu `-RepositoryUrl` | Chạy từ checkout hiện tại hoặc truyền `-RepositoryUrl 'https://github.com/LeDuyCoder/hd-skills.git'`. Nếu thư mục đích đã tồn tại, xác nhận đó là Git checkout đúng trước khi chạy lại. |
 | Không tìm thấy skill trong Codex/Antigravity | Chạy `doctor.ps1`, đọc đường dẫn target và agent detection; chạy `install.ps1 -DryRun`, cài lại bằng đúng mode, rồi khởi động lại/làm mới ứng dụng. Kiểm tra `/skills` trong Codex. |
 | Antigravity chưa được cài skill | Installer chỉ cài khi `%USERPROFILE%\.gemini\` được phát hiện. Cài hoặc mở Antigravity trước, rồi chạy lại bootstrap. Skill target chính thức là `%USERPROFILE%\.gemini\config\skills\`. |
 | Doctor báo vault không truy cập được hoặc dùng `.context\` | Kiểm tra vault path vẫn tồn tại; dùng `-VaultPath` hoặc đặt `$env:HD_SKILL_VAULT`. Nếu Obsidian có nhiều vault khác tên, chạy tương tác để chọn hoặc đặt tên `vaultName` trong config máy. |
