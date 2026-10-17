@@ -208,7 +208,7 @@ Nếu thư mục `%USERPROFILE%\.gemini\` không tồn tại, Antigravity chưa 
 
 ### Lệnh `/hd`
 
-Skill `hd` là bộ định tuyến lệnh: gõ `hd` kèm một lệnh con, và nó chuyển việc sang đúng skill. Trong Antigravity gõ `/hd`, trong Codex gõ `$hd` (Codex không hỗ trợ slash command cấp dự án nên gọi skill bằng `$`). Gõ `/hd` không kèm gì để xem menu.
+Skill `hd` là bộ định tuyến lệnh: gõ `hd` kèm một lệnh con, và nó chuyển việc sang đúng skill. Trong Antigravity gõ `/hd`, trong Codex gõ `$hd` (Codex không hỗ trợ slash command cấp dự án nên gọi skill bằng `$`). Gõ `/hd` không kèm gì để xem menu rút gọn (các lệnh hay dùng, chia theo nhóm); gõ `/hd all` để xem đủ mọi lệnh.
 
 Hai lệnh làm task chính:
 
@@ -237,7 +237,7 @@ Không gõ `/hd`, agent vẫn tự chọn một trong hai quy trình theo độ 
 | `init` | `context-bootstrap` | | `review` | `code-review` |
 | `load` | `context-load` | | `refactor` | `refactoring` |
 | `save` | `context-update` | | `security` | `security-review` |
-| `audit` | `context-audit` | | `git` | `git-workflow` |
+| `audit` | `context-audit` | | `commit` | `git-workflow` |
 | `handoff` | `session-handoff` | | `pr` | `pull-request` |
 | `plan` | `planning` | | `ci` | `fix-ci` |
 | `tdd` | `tdd` | | `deps` | `dependency-upgrade` |
