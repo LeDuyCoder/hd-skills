@@ -1,6 +1,6 @@
 # Phase 2 — Installation architecture
 
-**Status:** Proposal for review; no installer, skills, or user configuration has been installed.  
+**Status:** Approved architecture. Multi-machine requirements below supersede earlier fixed per-user path assumptions.  
 **Target:** One Windows source of truth for Codex and Antigravity, PowerShell 7, project-specific overrides committed with their repositories.
 
 ## 1. Source of truth and discovery
@@ -139,5 +139,34 @@ Enable by changing `disabled` to `false` after reviewing the same controls. JSON
 
 ## Review gate
 
-This completes the design for Phases 1 and 2 only. The next phase would create the Obsidian note templates and context skills, after the user approves this architecture and any requested changes.
+The Phase 1 and Phase 2 architecture, including the Multi-machine section below, has been approved. Implementation proceeds against this document. Real-machine installation follows the explicit backup, dry-run, no-MCP, and no-real-vault constraints in the active implementation request.
 
+# Multi-machine
+
+This section supersedes any fixed per-user paths in the earlier installation sketch. The repository contains only shared skills, rules, templates, and scripts. Machine-specific paths and selections live in `%USERPROFILE%\.hd-skill\config.json`, which is outside the repository. The installer never assumes that the profile, Documents, vault, or repository is on drive C; all paths are resolved at runtime and must support spaces and Unicode.
+
+## Configuration resolution
+
+Resolve settings in this order: command-line parameters to `install.ps1` (for example `-VaultPath`), environment variables (`HD_SKILL_HOME`, `HD_SKILL_VAULT`), `%USERPROFILE%\.hd-skill\config.json`, runtime discovery, then repository `config.defaults.json`. Persist first-run discoveries to the machine config and print the resolved values for the operator to review. `config.schema.json` defines and validates the machine config. Keep local project-name-to-path mappings in that config; never put local absolute project paths in shared notes.
+
+`Resolve-HdSkillConfig.ps1` is the shared runtime entry point for context skills. It emits JSON containing `vaultPath`, `contextMode` (`vault` or `repo`), installed `agents`, and a stable per-machine `machineId`. It applies the same environment, machine-config, discovery, and defaults precedence. Context skills call it before any context-store read or write. If no vault can be resolved, use the repository `.context\` store. The global rules only instruct agents to run the resolver; they do not embed a vault path.
+
+## Discovery and installation targets
+
+- Obsidian discovery reads `%APPDATA%\obsidian\obsidian.json`. Prefer a vault matching configured `vaultName` (default `DevBrain`). If several vaults exist but none matches, prompt for a choice; in `-NonInteractive` mode, use repository `.context\` and report the fallback. Obsidian is optional.
+- Detect Codex from the `codex` command and `%USERPROFILE%\.codex\`, recording its version when available. Detect Antigravity from `%USERPROFILE%\.gemini\` and its existing skill/MCP locations. Install only for agents detected on this machine. Report other Antigravity paths that already exist; do not create compatibility junctions to legacy locations.
+- Report whether Git, Node/npm/npx, and PowerShell 7 are available, with installation guidance for missing tools. Never install prerequisites automatically.
+- Use a shared skill source under the detected `HD_SKILL_HOME` (or the bootstrap-selected repository location). Link or copy only detected agent skill directories. Re-running install must converge on the same links/files and configuration without duplicate rules or MCP entries. Before changing agent configuration, make a timestamped backup and replace only the bounded `BEGIN/END hd-skill` block.
+- MCP is opt-in. Generate each agent's configuration from a checked-in template and the resolved machine paths; pin server versions. The default installation does not enable MCP.
+
+`bootstrap.ps1` clones or pulls the repository into `HD_SKILL_HOME`, resolves and summarizes machine settings, then invokes installation. It supports `-DryRun`, `-NonInteractive`, `-Mode Junction|Copy`, and `-WithMcp`. `install.ps1` defaults to a no-write dry run; actual writes require an explicit non-dry-run invocation. `update.ps1` pulls the shared repository, validates it, and reinstalls while preserving machine config. `uninstall.ps1` removes only hd-skill-owned links/copies and marked configuration blocks. `doctor.ps1` reports config validity, vault access, install link/copy integrity, agent visibility, optional MCP startup, and local versus remote repository revisions; each failed check includes a repair command or action.
+
+## Shared repository and vault synchronization
+
+Synchronize the hd-skill repository with Git. hd-skill does not synchronize vault contents. Document supported operator-managed vault choices: Obsidian Sync, a vault Git workflow, or OneDrive/Google Drive. Keep `.context\` as a local/repository fallback with the same note structure.
+
+Session notes use `<yyyy-MM-dd>_<machineId>.md` so separate machines do not overwrite one another. `context-update` edits only the relevant note section, checks the note's `updated` value before writing, and rereads/reconciles when the stored note is newer than the version it inspected. Shared project notes identify repositories by a repo-relative path or normalized Git remote (for example `github.com/owner/repo`), not by a machine-specific absolute path. Local checkout paths belong only in that machine's config.
+
+## Multi-machine verification gate
+
+Before releasing the installer, exercise three isolated machine profiles under `tests\machines\`: (a) Codex, Antigravity, and Obsidian; (b) Codex only and no Obsidian; and (c) paths containing spaces and Vietnamese characters. Point environment variables at each temporary profile. For each profile run bootstrap dry-run, install, a second install, doctor, and uninstall. Verify the second install makes no changes and uninstall restores the starting state. Record the results in `docs\PROGRESS.md` and commit the completed implementation as `feat(multi-machine): ...`.

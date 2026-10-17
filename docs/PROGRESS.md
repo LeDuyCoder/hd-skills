@@ -33,3 +33,18 @@
 - The fixture verification will use a small JavaScript/Node project; `context-bootstrap` reports only commands declared in `package.json` rather than inventing commands.
 - The `.context\` directory is Git-ignored for local fallback memory.
 - The approved workspace-only Git trust exception is recorded in the sandbox account's global Git config because the repository owner differs from the execution account; regular shell startup still fails, so validation and Git commands ran through the approved elevated path.
+
+## Remaining work — resumed implementation goal
+
+The approved Multi-machine amendment is in `docs\PHASE-2-ARCHITECTURE.md`. The worktree was inspected before resuming; existing M1 and M2 artifacts and their commits are present. Remaining work, in execution order:
+
+1. M1 completion: add `config.schema.json` and `config.defaults.json`, extend validation to check the schema, rerun M1 tests, update this file, and commit.
+2. Multi-machine foundation: implement shared config resolution and environment detection, add three isolated machine fixtures and tests, record verification, and commit.
+3. M2 hardening: make the five existing context skills resolve configuration before store access, make generated notes portable and conflict-aware, refine templates, run bootstrap on the fixture, assess generated note quality, and commit.
+4. M3 skills: add planning, TDD, debugging, verification, review, refactoring, security, Git, PR, CI, dependency, Windows, skill-improve, and stack-skill-generator skills; ensure resolver use and project-derived commands; validate and commit.
+5. M4 rules: write Codex and Antigravity global rules and a character-count check; verify both below 3,000 characters; commit.
+6. M5 lifecycle and installer: implement bootstrap/install/update/uninstall/doctor, pinned optional MCP templates, and three simulated-machine end-to-end cycles including dry-run, idempotence, diagnosis, and restoration; validate and commit.
+7. M6 real-machine install and evaluation: save and inspect the dry-run log, back up every external config before any edit, install non-interactively without MCP and without touching the real vault, run doctor, then run three comparative fixture tasks and record estimates in `docs\EVAL.md`.
+8. README: complete Vietnamese setup, use, extension, vault-sync, uninstall, and troubleshooting guidance; run final audits and commit.
+
+No real-machine installation or vault write has occurred. PowerShell 7 is absent; verification is currently using Windows PowerShell 5.1 unless a portable/test-only PowerShell 7 executable becomes available. M6 actions remain constrained by the approved backup and no-MCP/no-real-vault rules.
