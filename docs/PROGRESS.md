@@ -61,6 +61,12 @@ The approved Multi-machine amendment is in `docs\PHASE-2-ARCHITECTURE.md`. The w
 - Kiểm chứng giả lập M1–M5 chạy đạt trên ba profile máy; bootstrap/install dry-run, cài lặp idempotent, doctor và uninstall phục hồi baseline. Không thực hiện cài đặt thật lên hồ sơ Windows theo điểm dừng bắt buộc; đang chờ người dùng duyệt log DryRun.
 - Còn lại: sau khi được cho phép, backup và cài vào agent thật, chạy doctor, xác minh danh sách `/skills` và Antigravity, ghi kết quả install và commit phần M6 cuối.
 
+### Remote GitHub và README
+
+- Remote `origin` được cấu hình theo URL người dùng cung cấp: `https://github.com/LeDuyCoder/hs-skills.git`. Remote trống trước khi push; không có lịch sử phía server cần merge.
+- README được mở rộng lên hướng dẫn chi tiết gồm remote chính thức, lệnh cài một dòng, chế độ DryRun/Apply, tham số cài, thứ tự cấu hình, Codex/Antigravity, nhóm skill, context workflow, đồng bộ vault, cập nhật, gỡ cài, cấu trúc repo, kiểm chứng và bảng xử lý sự cố.
+- Kiểm chứng sau sửa README: 15 khối PowerShell parse được; validator pass 19 skills/schema/defaults; `git diff --check` không báo lỗi. Toàn bộ lịch sử đã push lên `origin/master`; M6 cài thật vẫn chờ xác nhận riêng.
+
 No real-machine installation or vault write has occurred. PowerShell 7 is absent; verification is currently using Windows PowerShell 5.1 unless a portable/test-only PowerShell 7 executable becomes available. M6 actions remain constrained by the approved backup and no-MCP/no-real-vault rules.
 
 ### Multi-machine foundation progress
