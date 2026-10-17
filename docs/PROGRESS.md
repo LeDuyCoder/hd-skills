@@ -21,9 +21,9 @@
 
 - Status: implementation and checks complete; milestone commit and durable fixture output pending.
 - Implemented: note templates for index, overview, architecture, module, ADR, gotchas, session, and stack; context-load/update/bootstrap/audit/session-handoff skills; stack detector, context bootstrap generator, freshness checker; a small Node fixture and M2 verification harness.
-- Verification: `powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tests\verify-m2.ps1` passed stack detection, package script extraction, note generation, no-BOM UTF-8 output, and fresh/stale Git path checks. `npm --prefix .\tests\fixtures\demo-node test` passed.
+- Verification: `powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tests\verify-m2.ps1` passed stack detection, package script extraction, note generation, no-BOM UTF-8 output, and fresh/stale Git path checks. `npm --prefix .\tests\fixtures\demo-node test` passed. The start command first exposed a Windows-specific CLI entry comparison bug; switching to `pathToFileURL` fixed it, and start now prints `Hello, world!`.
 - Commit: pending.
-- Remaining: commit M2 and capture the fixture notes in a reviewable output tree with the committed source revision in frontmatter.
+- Remaining: commit the Windows fixture fix and capture the reviewed fixture notes in a reviewable output tree with the committed source revision in frontmatter.
 
 ## Decisions made during implementation
 
