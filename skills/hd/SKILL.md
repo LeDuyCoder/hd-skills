@@ -12,13 +12,15 @@ Antigravity invokes this skill as `/hd`; Codex invokes it as `$hd`. Everything a
 1. Split the input into the first word (the subcommand) and the remaining text (the task).
 2. With no subcommand, or with `help` or `?`, print the command table below in the user's language and stop. Do not start any work.
 3. When the first word matches a command or alias in the table, open the mapped skill's `SKILL.md` from the same skills directory as this file (`../<skill>/SKILL.md`) and follow it completely, using the remaining text as the task. If the task text is empty and the skill needs one, ask a single question for it.
-4. When the first word matches nothing, treat the whole input as the task. Pick the one skill whose purpose fits best, name it in one line (for example "Using `systematic-debugging`."), then follow it. If two skills fit equally, ask which one to use.
+4. When the first word matches nothing, treat the whole input as the task. If it is a piece of work to build or change, use `quick-fix` for a small change at a known spot and `deep-task` for anything larger or unclear. Otherwise pick the one skill whose purpose fits best. Name the choice in one line (for example "Using `quick-fix`."), then follow it. If two choices fit equally, ask which one to use.
 5. Keep the mapped skill's own authorization limits and pass conditions. This router adds no permissions and skips no steps; for example, `commit` and `pr` still need the user's go-ahead to push or open a pull request.
 
 ## Commands
 
 | Command | Aliases | Skill | Purpose |
 |---|---|---|---|
+| `task` | `new`, `big` | `deep-task` | Large task: clarify with questions, plan, build, test, fix, loop until done |
+| `quick` | `q`, `small` | `quick-fix` | Small fix at a known spot; asks when the direction is unclear |
 | `init` | `bootstrap` | `context-bootstrap` | Create the first context notes for this project |
 | `load` | `ctx` | `context-load` | Load project context before working |
 | `save` | `update` | `context-update` | Record durable changes in the context notes |

@@ -199,6 +199,7 @@ Nếu thư mục `%USERPROFILE%\.gemini\` không tồn tại, Antigravity chưa 
 
 | Nhóm | Skill | Dùng khi |
 |---|---|---|
+| Làm task | `deep-task`, `quick-fix` | Task lớn: hỏi đến khi rõ → kế hoạch → làm → test → sửa lỗi → lặp đến khi xong. Task nhỏ: sửa nhanh, hỏi lại khi chưa rõ hướng. |
 | Context | `context-load`, `context-update`, `context-bootstrap`, `context-audit`, `session-handoff` | Đọc, khởi tạo, kiểm tra độ mới và cập nhật bộ nhớ dự án. |
 | Quy trình | `planning`, `tdd`, `systematic-debugging`, `verification-before-done` | Lập kế hoạch, phát triển theo test, truy nguyên lỗi và xác minh kết quả. |
 | Chất lượng | `code-review`, `refactoring`, `security-review` | Rà soát thay đổi, tái cấu trúc và tìm vấn đề bảo mật. |
@@ -209,8 +210,19 @@ Nếu thư mục `%USERPROFILE%\.gemini\` không tồn tại, Antigravity chưa 
 
 Skill `hd` là bộ định tuyến lệnh: gõ `hd` kèm một lệnh con, và nó chuyển việc sang đúng skill. Trong Antigravity gõ `/hd`, trong Codex gõ `$hd` (Codex không hỗ trợ slash command cấp dự án nên gọi skill bằng `$`). Gõ `/hd` không kèm gì để xem menu.
 
+Hai lệnh làm task chính:
+
+| Lệnh | Dùng khi | Quy trình |
+|---|---|---|
+| `/hd task <mô tả>` (`new`, `big`) | Tính năng mới, việc lớn, yêu cầu chưa rõ | Hỏi từng đợt 3-5 câu đến khi hiểu rõ, đưa phương án nếu có nhiều hướng → bạn xác nhận → kế hoạch → bạn duyệt → làm từng bước + test → lỗi thì tìm nguyên nhân gốc và sửa → gặp vấn đề mới thì quay lại hỏi và cập nhật kế hoạch → lặp đến khi mọi tiêu chí đạt → kiểm chứng và ghi vào vault |
+| `/hd quick <mô tả>` (`q`, `small`) | Sửa một chỗ, chỉnh nhỏ | Xem đúng chỗ cần sửa → nếu chưa rõ hướng thì hỏi 1-3 câu kèm lựa chọn A/B → sửa tối thiểu → chạy check nhanh → báo ngắn. Nếu việc phình to, nó báo và chuyển sang `task` |
+
+Không gõ `/hd`, agent vẫn tự chọn một trong hai quy trình theo độ lớn của việc (rule chung đã dặn điều này).
+
 ```text
 /hd                       hiện menu lệnh
+/hd task thêm phân quyền reviewer cho dự án
+/hd quick đổi message lỗi login sang tiếng Việt
 /hd init                  tạo context notes cho dự án (context-bootstrap)
 /hd plan thêm đăng nhập   lập kế hoạch (planning)
 /hd debug test login fail tìm nguyên nhân lỗi (systematic-debugging)
@@ -221,6 +233,7 @@ Skill `hd` là bộ định tuyến lệnh: gõ `hd` kèm một lệnh con, và 
 
 | Lệnh | Skill | | Lệnh | Skill |
 |---|---|---|---|---|
+| `task` | `deep-task` | | `quick` | `quick-fix` |
 | `init` | `context-bootstrap` | | `review` | `code-review` |
 | `load` | `context-load` | | `refactor` | `refactoring` |
 | `save` | `context-update` | | `security` | `security-review` |
