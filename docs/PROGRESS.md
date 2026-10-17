@@ -48,7 +48,7 @@ The approved Multi-machine amendment is in `docs\PHASE-2-ARCHITECTURE.md`. The w
 2. Multi-machine foundation: implement shared config resolution and environment detection, add three isolated machine fixtures and tests, record verification, and commit. **Complete:** commit `f9557bb`.
 3. M2 hardening: make the five existing context skills resolve configuration before store access, make generated notes portable and conflict-aware, refine templates, run bootstrap on the fixture, assess generated note quality, and commit. **Complete.**
 4. M3 skills: add planning, TDD, debugging, verification, review, refactoring, security, Git, PR, CI, dependency, Windows, skill-improve, and stack-skill-generator skills; ensure resolver use and project-derived commands; validate and commit. **Complete.**
-5. M4 rules: write Codex and Antigravity global rules and a character-count check; verify both below 3,000 characters; commit.
+5. M4 rules: write Codex and Antigravity global rules and a character-count check; verify both below 3,000 characters; commit. **Complete.**
 6. M5 lifecycle and installer: implement bootstrap/install/update/uninstall/doctor, pinned optional MCP templates, and three simulated-machine end-to-end cycles including dry-run, idempotence, diagnosis, and restoration; validate and commit.
 7. M6 real-machine install and evaluation: save and inspect the dry-run log, back up every external config before any edit, install non-interactively without MCP and without touching the real vault, run doctor, then run three comparative fixture tasks and record estimates in `docs\EVAL.md`.
 8. README: complete Vietnamese setup, use, extension, vault-sync, uninstall, and troubleshooting guidance; run final audits and commit.
@@ -69,3 +69,9 @@ No real-machine installation or vault write has occurred. PowerShell 7 is absent
 - Added: planning, tdd, systematic-debugging, verification-before-done, code-review, refactoring, security-review, git-workflow, pull-request, fix-ci, dependency-upgrade, windows-shell, skill-improve, and stack-skill-generator.
 - Every skill begins through `context-load` (which calls the shared resolver) and calls `context-update` when durable context changed. Project test/lint/build instructions require reading the project's overview/manifests rather than using a stack-wide hard-coded command.
 - Verification: validator passed all 19 skills; `tests\verify-m3.ps1` confirmed the full M3 set, context lifecycle guidance, and no rooted drive paths or hard-coded project commands. M2 and all three machine profile checks passed after adding the new skills.
+
+### M4 — Always-on agent rules
+
+- Status: both rules implemented and verified.
+- Added identical core instructions in `rules\AGENTS.md` and `rules\GEMINI.md`. They direct agents to use context-load/resolver before exploration, read project commands from overview/manifests, update durable context, and protect secrets and user changes.
+- Verification: `tests\verify-m4.ps1` printed 995 characters for each file, confirmed both are identical, each is under 3,000 characters, contains resolver guidance, and has no fixed drive path. Full skill validation and M3 checks passed.
