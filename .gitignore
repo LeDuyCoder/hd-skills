@@ -4,6 +4,7 @@
 # Temporary PowerShell/test output
 *.log
 *.tmp
+!docs/INSTALL-DRYRUN.log
 
 # Private user configuration and credentials
 .env

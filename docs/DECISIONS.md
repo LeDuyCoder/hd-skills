@@ -25,3 +25,27 @@ This file records reversible implementation choices that resolve details not ful
 - Decision: generated `updated` metadata uses ISO 8601 timestamps with a local offset. The context update helper locks the note, rereads its timestamp, refuses writes based on an older observation, changes only one heading section plus the timestamp, and replaces the file from a same-directory temporary file.
 - Reason: day-only timestamps cannot order two edits on the same day, and broad rewrites increase the chance of losing another machine's note changes.
 - Reversal: retain the timestamps and section boundaries while changing the lock or replacement implementation if cross-platform evidence requires it.
+
+## D-005 — Strict JSON MCP settings use a namespaced owned entry
+
+- Decision: the Antigravity MCP config remains valid JSON. Its hd-skill server is inserted under the unique `mcpServers.hd-skill-filesystem` key, which is the ownership boundary used for idempotent replacement and uninstall. Text and TOML files use literal `# BEGIN hd-skill` / `# END hd-skill` markers.
+- Reason: literal comment markers would make strict JSON invalid. The installer backs up the original file and preserves all other JSON properties when it merges or removes the owned entry.
+- Reversal: use a marker syntax only if the target client officially supports JSON-with-comments and validates it consistently.
+
+## D-006 — Mutating lifecycle scripts require `-Apply`
+
+- Decision: install, update, and uninstall default to dry-run behavior. `-Apply` is required for changes; bootstrap performs installation by default because it is the explicit one-line onboarding command, while `-DryRun` makes bootstrap read-only.
+- Reason: a missed switch should not silently change a profile. M6 real installation explicitly uses `-Apply` after reviewing the saved dry-run output.
+- Reversal: keep the dry-run default for direct install/update/uninstall commands; bootstrap can retain its explicit apply-by-default behavior.
+
+## D-007 — Pin the optional filesystem MCP package to a reviewed release
+
+- Decision: the generated optional MCP configuration uses `@modelcontextprotocol/server-filesystem@1.0.0` and never uses `@latest`.
+- Reason: the npm package page reports version 1.0.0 as the current tagged release checked on 2026-10-17; pinning makes repeat installations deterministic. Source: [npm package page](https://www.npmjs.com/package/%40modelcontextprotocol/server-filesystem?activeTab=versions).
+- Reversal: update the pinned version only after reviewing release behavior and updating the template/tests together.
+
+## D-008 — Fresh bootstrap accepts a repository URL instead of inventing one
+
+- Decision: when no local checkout or `HD_SKILL_HOME` Git remote exists, `bootstrap.ps1` requires `-RepositoryUrl`. The copyable README command prompts for the Git URL at run time.
+- Reason: this workspace has no configured Git origin, and inventing a public repository URL could send users to the wrong source.
+- Reversal: set the default URL after the project has a confirmed shared remote; local bootstrap remains available for tests and existing checkouts.

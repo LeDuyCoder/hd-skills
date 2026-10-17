@@ -1,0 +1,6 @@
+# BEGIN hd-skill
+[mcp_servers.hd_skill_context]
+command = "cmd"
+args = ["/c", "npx", "-y", "@modelcontextprotocol/server-filesystem@1.0.0", "{{vaultPathToml}}"]
+enabled = true
+# END hd-skill

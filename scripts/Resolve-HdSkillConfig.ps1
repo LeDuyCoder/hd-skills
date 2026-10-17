@@ -10,11 +10,12 @@ param(
 
 $ErrorActionPreference = 'Stop'
 $repo = [IO.Path]::GetFullPath($RepoRoot)
+$toolRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $profileRoot = [Environment]::GetEnvironmentVariable('USERPROFILE')
 if ([string]::IsNullOrWhiteSpace($profileRoot)) { $profileRoot = [Environment]::GetFolderPath('UserProfile') }
 $machineConfigPath = if ($ConfigPath) { [IO.Path]::GetFullPath($ConfigPath) } else { Join-Path $profileRoot '.hd-skill\config.json' }
-$defaultsPath = Join-Path $repo 'config.defaults.json'
-$schemaPath = Join-Path $repo 'config.schema.json'
+$defaultsPath = Join-Path $toolRoot 'config.defaults.json'
+$schemaPath = Join-Path $toolRoot 'config.schema.json'
 if (-not (Test-Path -LiteralPath $defaultsPath -PathType Leaf) -or -not (Test-Path -LiteralPath $schemaPath -PathType Leaf)) {
     throw "Repository configuration files are missing under '$repo'. Run validate.ps1 and restore config.defaults.json/config.schema.json."
 }
@@ -29,7 +30,7 @@ if (Test-Path -LiteralPath $machineConfigPath -PathType Leaf) {
     if ($machineConfig.schemaVersion -ne 1) { throw "Unsupported machine config schemaVersion '$($machineConfig.schemaVersion)'." }
 }
 $detected = (& (Join-Path $PSScriptRoot 'Detect-Environment.ps1') -RepoRoot $repo | ConvertFrom-Json -ErrorAction Stop)
-$resolvedHome = if ($HdSkillHome) { $HdSkillHome } elseif ($env:HD_SKILL_HOME) { $env:HD_SKILL_HOME } elseif ($machineConfig -and $machineConfig.hdSkillHome) { $machineConfig.hdSkillHome } else { $repo }
+$resolvedHome = if ($HdSkillHome) { $HdSkillHome } elseif ($env:HD_SKILL_HOME) { $env:HD_SKILL_HOME } elseif ($machineConfig -and $machineConfig.hdSkillHome) { $machineConfig.hdSkillHome } else { $toolRoot }
 $resolvedHome = [IO.Path]::GetFullPath($resolvedHome)
 
 $effectiveVaultPath = $null

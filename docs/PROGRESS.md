@@ -49,7 +49,7 @@ The approved Multi-machine amendment is in `docs\PHASE-2-ARCHITECTURE.md`. The w
 3. M2 hardening: make the five existing context skills resolve configuration before store access, make generated notes portable and conflict-aware, refine templates, run bootstrap on the fixture, assess generated note quality, and commit. **Complete.**
 4. M3 skills: add planning, TDD, debugging, verification, review, refactoring, security, Git, PR, CI, dependency, Windows, skill-improve, and stack-skill-generator skills; ensure resolver use and project-derived commands; validate and commit. **Complete.**
 5. M4 rules: write Codex and Antigravity global rules and a character-count check; verify both below 3,000 characters; commit. **Complete.**
-6. M5 lifecycle and installer: implement bootstrap/install/update/uninstall/doctor, pinned optional MCP templates, and three simulated-machine end-to-end cycles including dry-run, idempotence, diagnosis, and restoration; validate and commit.
+6. M5 lifecycle and installer: implement bootstrap/install/update/uninstall/doctor, pinned optional MCP templates, and three simulated-machine end-to-end cycles including dry-run, idempotence, diagnosis, and restoration; validate and commit. **Complete.**
 7. M6 real-machine install and evaluation: save and inspect the dry-run log, back up every external config before any edit, install non-interactively without MCP and without touching the real vault, run doctor, then run three comparative fixture tasks and record estimates in `docs\EVAL.md`.
 8. README: complete Vietnamese setup, use, extension, vault-sync, uninstall, and troubleshooting guidance; run final audits and commit.
 
@@ -75,3 +75,13 @@ No real-machine installation or vault write has occurred. PowerShell 7 is absent
 - Status: both rules implemented and verified.
 - Added identical core instructions in `rules\AGENTS.md` and `rules\GEMINI.md`. They direct agents to use context-load/resolver before exploration, read project commands from overview/manifests, update durable context, and protect secrets and user changes.
 - Verification: `tests\verify-m4.ps1` printed 995 characters for each file, confirmed both are identical, each is under 3,000 characters, contains resolver guidance, and has no fixed drive path. Full skill validation and M3 checks passed.
+
+### M5 — Bootstrap, installer, update, uninstall, and doctor
+
+- Status: implemented and verified on three isolated profiles; no real user profile was changed.
+- Added `bootstrap.ps1`, `install.ps1`, `update.ps1`, `uninstall.ps1`, and `doctor.ps1`. Direct install/update/uninstall commands default to dry-run and require `-Apply`; bootstrap applies by default and supports read-only `-DryRun`.
+- Install detects only present agents, installs each skill by Junction or Copy, copies the shared resolver/schema/defaults into the machine-local hd-skill home, merges bounded rule blocks, persists machine config, and records ownership for safe uninstall. Repeated installs converge without file or directory changes. Existing config files are backed up before edits. MCP remains opt-in and uses a pinned 1.0.0 template.
+- Uninstall removes only recorded junctions/copies and managed config entries, restores pre-existing rule text exactly, preserves modified/unmanaged files, and leaves timestamped backups available.
+- Doctor validates machine config, resolver-selected vault/fallback, copied files/junction targets, detected agent visibility, optional MCP startup, and local/remote Git state; failures include repair guidance.
+- Verification: full regression passed: PowerShell scripts parsed; validator passed 19 skills and config files; M1–M4 suites passed; three machine profiles passed bootstrap dry-run, default install dry-run, install, second install with no changes, update dry-run, doctor, default uninstall dry-run, and uninstall returning all non-backup files/directories to baseline. The junction test deliberately redirected one skill and doctor detected it. Optional MCP dry-run planned both agent configs with a Unicode path and pinned version 1.0.0 without writing files. A separate local-origin test cloned through bootstrap, installed, passed doctor, and updated while preserving machine config.
+- Decisions D-005 through D-008 record strict-JSON ownership, explicit apply switch, the MCP pin, and the repository URL prompt.

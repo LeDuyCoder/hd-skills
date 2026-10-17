@@ -12,6 +12,9 @@ if ([string]::IsNullOrWhiteSpace($appDataRoot)) { $appDataRoot = Join-Path $prof
 $codexCommand = Get-Command codex -ErrorAction SilentlyContinue
 $codexHome = Join-Path $profileRoot '.codex'
 $geminiHome = Join-Path $profileRoot '.gemini'
+$codexSkillsPath = Join-Path $profileRoot '.agents\skills'
+$geminiSkillsPath = Join-Path $geminiHome 'config\skills'
+$geminiMcpPath = Join-Path $geminiHome 'config\mcp_config.json'
 $codexDetected = [bool]($codexCommand -or (Test-Path -LiteralPath $codexHome -PathType Container))
 $antigravityDetected = Test-Path -LiteralPath $geminiHome -PathType Container
 $codexVersion = $null
@@ -73,8 +76,8 @@ if ([string]::IsNullOrWhiteSpace($machineId)) {
     profileRoot = $profileRoot
     appDataRoot = $appDataRoot
     repoRoot = [IO.Path]::GetFullPath($RepoRoot)
-    codex = [pscustomobject]@{ installed = $codexDetected; home = $codexHome; command = if ($codexCommand) { $codexCommand.Source } else { $null }; version = $codexVersion }
-    antigravity = [pscustomobject]@{ installed = $antigravityDetected; home = $geminiHome; skillsPath = (Join-Path $geminiHome 'config\skills'); legacySkillsPath = (Join-Path $geminiHome 'antigravity\skills') }
+    codex = [pscustomobject]@{ installed = $codexDetected; home = $codexHome; skillsPath = $codexSkillsPath; mcpConfigPath = (Join-Path $codexHome 'config.toml'); command = if ($codexCommand) { $codexCommand.Source } else { $null }; version = $codexVersion }
+    antigravity = [pscustomobject]@{ installed = $antigravityDetected; home = $geminiHome; skillsPath = $geminiSkillsPath; skillsDirectoryExists = (Test-Path -LiteralPath $geminiSkillsPath -PathType Container); existingSkillNames = if (Test-Path -LiteralPath $geminiSkillsPath -PathType Container) { @(Get-ChildItem -LiteralPath $geminiSkillsPath -Directory | ForEach-Object Name) } else { @() }; mcpConfigPath = $geminiMcpPath; mcpConfigured = (Test-Path -LiteralPath $geminiMcpPath -PathType Leaf); legacySkillsPath = (Join-Path $geminiHome 'antigravity\skills') }
     obsidian = [pscustomobject]@{ configPath = $obsidianConfigPath; vaults = @($vaults) }
     tools = [pscustomobject]$tools
     missingToolGuidance = [pscustomobject]$missingToolGuidance
