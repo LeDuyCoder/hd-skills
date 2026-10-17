@@ -47,7 +47,7 @@ The approved Multi-machine amendment is in `docs\PHASE-2-ARCHITECTURE.md`. The w
 1. M1 completion: add `config.schema.json` and `config.defaults.json`, extend validation to check the schema, rerun M1 tests, update this file, and commit. **Complete:** commit `549fa27`.
 2. Multi-machine foundation: implement shared config resolution and environment detection, add three isolated machine fixtures and tests, record verification, and commit. **Complete:** commit `f9557bb`.
 3. M2 hardening: make the five existing context skills resolve configuration before store access, make generated notes portable and conflict-aware, refine templates, run bootstrap on the fixture, assess generated note quality, and commit. **Complete.**
-4. M3 skills: add planning, TDD, debugging, verification, review, refactoring, security, Git, PR, CI, dependency, Windows, skill-improve, and stack-skill-generator skills; ensure resolver use and project-derived commands; validate and commit.
+4. M3 skills: add planning, TDD, debugging, verification, review, refactoring, security, Git, PR, CI, dependency, Windows, skill-improve, and stack-skill-generator skills; ensure resolver use and project-derived commands; validate and commit. **Complete.**
 5. M4 rules: write Codex and Antigravity global rules and a character-count check; verify both below 3,000 characters; commit.
 6. M5 lifecycle and installer: implement bootstrap/install/update/uninstall/doctor, pinned optional MCP templates, and three simulated-machine end-to-end cycles including dry-run, idempotence, diagnosis, and restoration; validate and commit.
 7. M6 real-machine install and evaluation: save and inspect the dry-run log, back up every external config before any edit, install non-interactively without MCP and without touching the real vault, run doctor, then run three comparative fixture tasks and record estimates in `docs\EVAL.md`.
@@ -62,3 +62,10 @@ No real-machine installation or vault write has occurred. PowerShell 7 is absent
 - Verification: `validate.ps1` passed all 5 skills and schema/defaults; the three simulated-machine profiles passed. During testing the PowerShell parser rejected an interpolated warning string, and the Unicode case initially used an intentionally unmatched vault leaf; both were corrected and the suite passed afterward.
 - Decision records: D-001 (avoid selecting a differently named sole vault), D-002 (stable compact machine ID), and D-003 (dependency-free schema subset) are in `docs\DECISIONS.md`.
 - Status: complete and committed as `f9557bb feat(multi-machine): resolve machine configuration`.
+
+### M3 — Process and quality skills
+
+- Status: all 14 requested skills implemented and verified; included in this milestone commit.
+- Added: planning, tdd, systematic-debugging, verification-before-done, code-review, refactoring, security-review, git-workflow, pull-request, fix-ci, dependency-upgrade, windows-shell, skill-improve, and stack-skill-generator.
+- Every skill begins through `context-load` (which calls the shared resolver) and calls `context-update` when durable context changed. Project test/lint/build instructions require reading the project's overview/manifests rather than using a stack-wide hard-coded command.
+- Verification: validator passed all 19 skills; `tests\verify-m3.ps1` confirmed the full M3 set, context lifecycle guidance, and no rooted drive paths or hard-coded project commands. M2 and all three machine profile checks passed after adding the new skills.
