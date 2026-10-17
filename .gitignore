@@ -1,0 +1,19 @@
+# Local project memory; keep the vault source as Markdown in vault-template/.
+.context/
+
+# Temporary PowerShell/test output
+*.log
+*.tmp
+
+# Private user configuration and credentials
+.env
+.env.*
+!.env.example
+config.local.toml
+mcp_config.local.json
+
+# Operating system and editors
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
