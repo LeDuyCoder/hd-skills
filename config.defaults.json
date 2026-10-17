@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "vaultName": "DevBrain",
+  "vaultPath": null,
+  "contextMode": "repo",
+  "agents": {
+    "codex": false,
+    "antigravity": false
+  },
+  "machineId": "unconfigured",
+  "projects": {},
+  "mcpEnabled": false
+}

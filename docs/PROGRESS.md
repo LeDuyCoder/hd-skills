@@ -11,11 +11,14 @@
 
 ## M1 — Repository structure and validator
 
-- Status: implemented and verified; milestone commit pending.
+- Status: complete and verified.
 - Implemented: required top-level directories; `.gitignore`; `scripts\validate.ps1`; `tests\verify-m1.ps1`.
 - Verification: `powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tests\verify-m1.ps1` passed. It confirmed empty-tree success, >300-character description warning without failure, and correct errors for malformed frontmatter, missing description, folder/name mismatch, duplicate name, >300 body lines, and UTF-8 BOM.
 - Commits: `dc30e3f feat(m1): add portable skill validator`; `d5d12d6 feat(m1): verify duplicate skill names`.
-- Remaining: none; M1 is complete.
+- Added `config.schema.json` for machine-specific settings and `config.defaults.json` with portable defaults (no machine paths). Extended `validate.ps1` to verify strict UTF-8/no BOM, schema shape, and defaults against the schema's supported JSON Schema constraints.
+- Verification: `tests\verify-m1.ps1` passed empty-tree, description warning, and invalid skill sample checks; validation of all 5 current skills plus config schema/defaults passed. One PowerShell collection binding issue and one null/default-schema traversal issue were fixed during test iteration.
+- Commit: pending.
+- Remaining: none.
 
 ## M2 — Context memory system
 

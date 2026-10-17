@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hd-skill.local/config.schema.json",
+  "title": "hd-skill machine configuration",
+  "description": "Machine-specific settings stored outside the shared repository.",
+  "type": "object",
+  "required": ["schemaVersion", "vaultName", "vaultPath", "contextMode", "agents", "machineId", "projects", "mcpEnabled"],
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": { "type": "integer", "const": 1 },
+    "vaultName": { "type": "string", "minLength": 1 },
+    "vaultPath": { "type": ["string", "null"], "minLength": 1 },
+    "contextMode": { "type": "string", "enum": ["vault", "repo"] },
+    "agents": {
+      "type": "object",
+      "required": ["codex", "antigravity"],
+      "additionalProperties": false,
+      "properties": {
+        "codex": { "type": "boolean" },
+        "antigravity": { "type": "boolean" }
+      }
+    },
+    "machineId": { "type": "string", "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_-]{1,31}$" },
+    "projects": {
+      "type": "object",
+      "additionalProperties": { "type": "string", "minLength": 1 }
+    },
+    "mcpEnabled": { "type": "boolean" }
+  }
+}
