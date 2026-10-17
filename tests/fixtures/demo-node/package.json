@@ -1,0 +1,11 @@
+{
+  "name": "demo-node",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "A tiny greeting library used to verify context bootstrap output.",
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "node tests/smoke.js"
+  }
+}

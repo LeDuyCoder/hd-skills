@@ -1,4 +1,4 @@
-[CmdletBinding()]
+﻿[CmdletBinding()]
 param(
     [Parameter()]
     [string] $RootPath = (Join-Path $PSScriptRoot '..\skills')
