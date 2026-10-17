@@ -49,11 +49,35 @@ flowchart LR
 
 ## 🚀 Cài nhanh trên máy mới
 
-Cần Git for Windows và Windows PowerShell 5.1 trở lên; PowerShell 7 được khuyến nghị. Cài Codex và/hoặc Antigravity trước. Node.js LTS chỉ cần nếu bật MCP. hd-skill không tự cài phần mềm. Lệnh một dòng sau clone repo vào thư mục người dùng rồi chạy bootstrap:
+Cần Git for Windows và Windows PowerShell 5.1 trở lên; PowerShell 7 được khuyến nghị. Cài Codex và/hoặc Antigravity trước. Node.js LTS chỉ cần nếu bật MCP. hd-skill không tự cài phần mềm.
+
+Mở PowerShell **trong thư mục dự án** rồi chạy:
 
 ```powershell
-$repoUrl = 'https://github.com/LeDuyCoder/hs-skills.git'; $repoHome = Join-Path $env:USERPROFILE '.hd-skill\repo'; if (Test-Path -LiteralPath $repoHome) { $origin = git -C $repoHome remote get-url origin; if ($LASTEXITCODE -ne 0 -or $origin.Trim() -ne $repoUrl) { throw 'The existing repo path does not use the hd-skill remote; inspect it before continuing.' } } else { git clone $repoUrl $repoHome; if ($LASTEXITCODE -ne 0) { throw 'git clone failed' } }; & (Join-Path $repoHome 'bootstrap.ps1') -RepositoryUrl $repoUrl -Mode Junction
+irm https://raw.githubusercontent.com/LeDuyCoder/hs-skills/master/get.ps1 | iex
 ```
+
+Lệnh hỏi nơi cài:
+
+| Lựa chọn | Cài vào đâu | Khi nào dùng |
+|---|---|---|
+| `[1] Global` (mặc định) | `%USERPROFILE%\.agents\skills`, `.gemini\config\skills` và rule của từng agent | Một lần cho mọi dự án trên máy |
+| `[2] Project` | `<dự án>\.agents\skills\`, khối rule trong `<dự án>\AGENTS.md`, runtime ở `<dự án>\.hd-skill\` | Chỉ dự án này; commit lên Git để cả team dùng chung |
+
+Codex và Antigravity đều đọc `.agents\skills\` và `AGENTS.md` ở gốc dự án, nên chế độ Project dùng chung một đích cho cả hai. Chạy lại cùng lệnh để cập nhật. File skill bạn đã sửa tay sẽ được giữ nguyên và có cảnh báo; file trùng tên không do hd-skill quản lý thì installer từ chối ghi đè.
+
+Chọn sẵn, không hỏi (dùng cho script/CI):
+
+```powershell
+# Cách 1: biến môi trường
+$env:HD_SKILL_SCOPE = 'Project'; irm https://raw.githubusercontent.com/LeDuyCoder/hs-skills/master/get.ps1 | iex
+
+# Cách 2: truyền tham số (-Scope Global|Project, -DryRun, -Uninstall, -ProjectPath, -VaultPath, -WithMcp, -NonInteractive)
+& ([scriptblock]::Create((irm https://raw.githubusercontent.com/LeDuyCoder/hs-skills/master/get.ps1))) -Scope Project -DryRun
+& ([scriptblock]::Create((irm https://raw.githubusercontent.com/LeDuyCoder/hs-skills/master/get.ps1))) -Scope Project -Uninstall
+```
+
+`get.ps1` clone repo vào `%USERPROFILE%\.hd-skill\repo`, hoặc pull nếu đã có. Với `Global`, script chuyển cho `bootstrap.ps1`; với `Project`, script chạy `install-project.ps1`. Dùng `-DryRun` để chỉ xem kế hoạch; lúc này repo được clone vào thư mục tạm rồi xóa. Từ một checkout có sẵn có thể gọi trực tiếp `& .\install-project.ps1 -ProjectPath <dự án> -Apply`; thêm `-Uninstall` để gỡ.
 
 Bootstrap phát hiện agent và vault, in tóm tắt cấu hình, lưu kết quả vào cấu hình máy rồi cài cho agent hiện có. Lệnh một dòng thực hiện cài đặt. Để chỉ xem kế hoạch, chạy bootstrap với `-DryRun`; chế độ này không clone, pull hay ghi cấu hình. Installer chỉ cài skill cho agent thực sự được phát hiện. Antigravity dùng `%USERPROFILE%\.gemini\config\skills\`; vị trí skill cũ nếu có chỉ được báo cáo.
 
@@ -286,6 +310,8 @@ tests/fixtures/          Repo mẫu dùng kiểm chứng
 tests/machines/          Kiểm thử profile Windows giả lập
 tests/output/            Notes mẫu được sinh từ fixture
 vault-template/          Mẫu cấu trúc context store
+get.ps1                  Điểm vào của lệnh một dòng (irm | iex), cho chọn Global/Project
+install-project.ps1      Cài/cập nhật/gỡ skill trong một dự án
 ```
 
 `%USERPROFILE%\.hd-skill\config.json`, `install-state.json`, scripts runtime đã copy và backups nằm ngoài repo. Thư mục `.context\` là fallback cục bộ và được Git ignore.

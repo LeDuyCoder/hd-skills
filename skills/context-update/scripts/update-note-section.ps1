@@ -11,6 +11,8 @@ $ErrorActionPreference = 'Stop'
 $repo = [IO.Path]::GetFullPath($RepoPath)
 $note = [IO.Path]::GetFullPath($NotePath)
 $resolverCandidates = @()
+# A project install keeps its own runtime at <project>\.hd-skill; <project>\.agents\skills\<skill>\scripts is four levels below it.
+$resolverCandidates += [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\..\..\..\.hd-skill\scripts\Resolve-HdSkillConfig.ps1'))
 if ($env:USERPROFILE) { $resolverCandidates += Join-Path $env:USERPROFILE '.hd-skill\scripts\Resolve-HdSkillConfig.ps1' }
 if ($env:HD_SKILL_HOME) { $resolverCandidates += Join-Path $env:HD_SKILL_HOME 'scripts\Resolve-HdSkillConfig.ps1' }
 $resolverCandidates += [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\..\..\scripts\Resolve-HdSkillConfig.ps1'))
