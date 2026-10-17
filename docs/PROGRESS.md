@@ -53,6 +53,14 @@ The approved Multi-machine amendment is in `docs\PHASE-2-ARCHITECTURE.md`. The w
 7. M6 real-machine install and evaluation: save and inspect the dry-run log, back up every external config before any edit, install non-interactively without MCP and without touching the real vault, run doctor, then run three comparative fixture tasks and record estimates in `docs\EVAL.md`.
 8. README: complete Vietnamese setup, use, extension, vault-sync, uninstall, and troubleshooting guidance; run final audits and commit.
 
+### M6 — Máy thật và đánh giá
+
+- README tiếng Việt đã hoàn thiện: bootstrap một dòng có hỏi Git URL, dùng Codex/Antigravity, cấu hình vault theo từng máy, thêm dự án/skill, đồng bộ vault, chẩn đoán và gỡ cài.
+- DryRun trên hồ sơ hiện tại được ghi tại `docs\INSTALL-DRYRUN.log`. Kết quả: config chưa tồn tại; phát hiện Codex và Antigravity; không thấy Obsidian vault khớp `DevBrain`, chọn `.context`; MCP tắt. DryRun xác nhận không ghi file/link/backup/cấu hình. Codex `AGENTS.md` được lên kế hoạch backup trước khi sửa. PowerShell 7 chưa có; các script đã kiểm chứng dưới Windows PowerShell 5.1.
+- `docs\EVAL.md` ghi ba cặp tác vụ trên fixture, số lần đọc/công cụ và ước lượng token theo ký tự/4. Trên fixture nhỏ, note bootstrap sơ bộ khiến tổng tài liệu đọc tăng 305 lên 2.044 token ước lượng và thêm một lần đọc; không khẳng định tiết kiệm trước khi thử repo nhiều module với note đã được rà soát.
+- Kiểm chứng giả lập M1–M5 chạy đạt trên ba profile máy; bootstrap/install dry-run, cài lặp idempotent, doctor và uninstall phục hồi baseline. Không thực hiện cài đặt thật lên hồ sơ Windows theo điểm dừng bắt buộc; đang chờ người dùng duyệt log DryRun.
+- Còn lại: sau khi được cho phép, backup và cài vào agent thật, chạy doctor, xác minh danh sách `/skills` và Antigravity, ghi kết quả install và commit phần M6 cuối.
+
 No real-machine installation or vault write has occurred. PowerShell 7 is absent; verification is currently using Windows PowerShell 5.1 unless a portable/test-only PowerShell 7 executable becomes available. M6 actions remain constrained by the approved backup and no-MCP/no-real-vault rules.
 
 ### Multi-machine foundation progress
