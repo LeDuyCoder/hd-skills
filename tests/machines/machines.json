@@ -1,0 +1,23 @@
+[
+  {
+    "name": "codex-antigravity-obsidian",
+    "profileFolder": "machine-a",
+    "agents": ["codex", "antigravity"],
+    "vault": "DevBrain",
+    "expectedMode": "vault"
+  },
+  {
+    "name": "codex-only-no-obsidian",
+    "profileFolder": "machine-b",
+    "agents": ["codex"],
+    "vault": null,
+    "expectedMode": "repo"
+  },
+  {
+    "name": "unicode-spaces-paths",
+    "profileFolder": "Máy thử nghiệm 03",
+    "agents": ["codex", "antigravity"],
+    "vault": "DevBrain",
+    "expectedMode": "vault"
+  }
+]

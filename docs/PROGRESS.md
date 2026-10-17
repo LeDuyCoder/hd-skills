@@ -41,7 +41,7 @@
 
 The approved Multi-machine amendment is in `docs\PHASE-2-ARCHITECTURE.md`. The worktree was inspected before resuming; existing M1 and M2 artifacts and their commits are present. Remaining work, in execution order:
 
-1. M1 completion: add `config.schema.json` and `config.defaults.json`, extend validation to check the schema, rerun M1 tests, update this file, and commit.
+1. M1 completion: add `config.schema.json` and `config.defaults.json`, extend validation to check the schema, rerun M1 tests, update this file, and commit. **Complete:** commit `549fa27`.
 2. Multi-machine foundation: implement shared config resolution and environment detection, add three isolated machine fixtures and tests, record verification, and commit.
 3. M2 hardening: make the five existing context skills resolve configuration before store access, make generated notes portable and conflict-aware, refine templates, run bootstrap on the fixture, assess generated note quality, and commit.
 4. M3 skills: add planning, TDD, debugging, verification, review, refactoring, security, Git, PR, CI, dependency, Windows, skill-improve, and stack-skill-generator skills; ensure resolver use and project-derived commands; validate and commit.
@@ -51,3 +51,11 @@ The approved Multi-machine amendment is in `docs\PHASE-2-ARCHITECTURE.md`. The w
 8. README: complete Vietnamese setup, use, extension, vault-sync, uninstall, and troubleshooting guidance; run final audits and commit.
 
 No real-machine installation or vault write has occurred. PowerShell 7 is absent; verification is currently using Windows PowerShell 5.1 unless a portable/test-only PowerShell 7 executable becomes available. M6 actions remain constrained by the approved backup and no-MCP/no-real-vault rules.
+
+### Multi-machine foundation progress
+
+- Implemented `scripts\Detect-Environment.ps1` and `scripts\Resolve-HdSkillConfig.ps1`. Resolution supports parameter/environment/machine-config/discovery/default precedence, detects Codex and Antigravity, reads Obsidian vault metadata, supports repository fallback, returns JSON, and can persist first-run machine settings without a BOM.
+- Added `tests\machines\machines.json` and `verify-machines.ps1` for three isolated Windows profiles. Profiles cover both agents plus named Obsidian vault, Codex-only/no-vault fallback, and Unicode/spaced paths. The harness verifies first-run persistence and stable repeated resolution.
+- Verification: `validate.ps1` passed all 5 skills and schema/defaults; the three simulated-machine profiles passed. During testing the PowerShell parser rejected an interpolated warning string, and the Unicode case initially used an intentionally unmatched vault leaf; both were corrected and the suite passed afterward.
+- Decision records: D-001 (avoid selecting a differently named sole vault), D-002 (stable compact machine ID), and D-003 (dependency-free schema subset) are in `docs\DECISIONS.md`.
+- Status: implementation complete; final verification and milestone commit pending.

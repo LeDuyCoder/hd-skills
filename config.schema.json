@@ -25,6 +25,7 @@
       "type": "object",
       "additionalProperties": { "type": "string", "minLength": 1 }
     },
-    "mcpEnabled": { "type": "boolean" }
+    "mcpEnabled": { "type": "boolean" },
+    "hdSkillHome": { "type": "string", "minLength": 1 }
   }
 }
