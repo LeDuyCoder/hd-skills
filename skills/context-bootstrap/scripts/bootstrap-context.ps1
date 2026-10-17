@@ -15,6 +15,13 @@ param(
 
 $ErrorActionPreference = 'Stop'
 $repo = [IO.Path]::GetFullPath($RepoPath)
+$resolverCandidates = @()
+if ($env:USERPROFILE) { $resolverCandidates += Join-Path $env:USERPROFILE '.hd-skill\scripts\Resolve-HdSkillConfig.ps1' }
+if ($env:HD_SKILL_HOME) { $resolverCandidates += Join-Path $env:HD_SKILL_HOME 'scripts\Resolve-HdSkillConfig.ps1' }
+$resolverCandidates += [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\..\..\scripts\Resolve-HdSkillConfig.ps1'))
+$resolverPath = $resolverCandidates | Where-Object { Test-Path -LiteralPath $_ -PathType Leaf } | Select-Object -First 1
+if (-not $resolverPath) { throw 'Resolve-HdSkillConfig.ps1 was not found. Install hd-skill or set HD_SKILL_HOME.' }
+$resolution = (& $resolverPath -RepoRoot $repo -NonInteractive | ConvertFrom-Json -ErrorAction Stop)
 if (-not (Test-Path -LiteralPath $repo -PathType Container)) { throw "Repository does not exist: $repo" }
 if ([string]::IsNullOrWhiteSpace($ProjectName)) { $ProjectName = Split-Path -Leaf $repo }
 $slug = ($ProjectName.ToLowerInvariant() -replace '[^a-z0-9]+', '-') -replace '(^-|-$)', ''
@@ -38,14 +45,28 @@ if ($DetectOnly) {
     exit 0
 }
 
-if ([string]::IsNullOrWhiteSpace($OutputRoot)) { $OutputRoot = Join-Path $repo '.context' }
+if ([string]::IsNullOrWhiteSpace($OutputRoot)) { $OutputRoot = [string]$resolution.vaultPath }
 $vault = [IO.Path]::GetFullPath($OutputRoot)
 $projectDir = Join-Path (Join-Path $vault 'projects') $slug
 $moduleDir = Join-Path $projectDir 'modules'
 $decisionDir = Join-Path $projectDir 'decisions'
 $sessionDir = Join-Path $projectDir 'sessions'
-$repoRelative = (Split-Path -Leaf $repo)
+$repoIdentity = $null
+try { $remote = (& git -C $repo remote get-url origin 2>$null) }
+catch { $remote = $null }
+if ($LASTEXITCODE -eq 0 -and -not [string]::IsNullOrWhiteSpace($remote)) {
+    $remoteValue = $remote.Trim() -replace '\.git$', ''
+    if ($remoteValue -match '^git@([^:]+):(.+)$') { $repoIdentity = ($Matches[1].ToLowerInvariant() + '/' + $Matches[2]) }
+    elseif ($remoteValue -match '^(?:https?|ssh)://(?:[^@/]+@)?([^/]+)/(.+)$') { $repoIdentity = ($Matches[1].ToLowerInvariant() + '/' + $Matches[2]) }
+}
+if (-not $repoIdentity) {
+    $currentDirectory = [IO.Path]::GetFullPath((Get-Location).Path).TrimEnd('\')
+    if ($repo.StartsWith($currentDirectory + '\', [StringComparison]::OrdinalIgnoreCase)) { $repoIdentity = $repo.Substring($currentDirectory.Length).TrimStart('\').Replace('\', '/') }
+    else { $repoIdentity = Split-Path -Leaf $repo }
+}
 $date = Get-Date -Format 'yyyy-MM-dd'
+$timestamp = [DateTimeOffset]::Now.ToString('o')
+$machineId = [string]$resolution.machineId
 $commit = 'unverified'
 $gitRoot = (& git -C $repo rev-parse --show-toplevel 2>$null)
 if ($LASTEXITCODE -eq 0 -and -not [string]::IsNullOrWhiteSpace($gitRoot)) {
@@ -114,7 +135,7 @@ module: overview
 paths:
 $overviewPathYaml
 last_verified_commit: $commit
-updated: $date
+updated: $timestamp
 tags:
   - project
   - overview
@@ -149,7 +170,7 @@ $commandRows
 
 ## Repository map
 
-- Repository root: ``$repoRelative``
+- Repository identity (remote or relative name): ``$repoIdentity``
 - Source inventory: $($sourceFiles.Count) supported-language source file(s) under ``src\``.
 - Module inventory is linked from [[architecture]].
 
@@ -180,7 +201,7 @@ module: architecture
 paths:
   - src/
 last_verified_commit: $commit
-updated: $date
+updated: $timestamp
 tags:
   - project
   - architecture
@@ -229,7 +250,7 @@ module: $moduleSlug
 paths:
 $pathYaml
 last_verified_commit: $commit
-updated: $date
+updated: $timestamp
 tags:
   - project
   - module
@@ -260,7 +281,7 @@ module: gotchas
 paths:
   - package.json
 last_verified_commit: $commit
-updated: $date
+updated: $timestamp
 tags:
   - project
   - gotchas
@@ -280,7 +301,7 @@ module: decisions
 paths:
   - package.json
 last_verified_commit: $commit
-updated: $date
+updated: $timestamp
 tags:
   - project
   - decisions
@@ -300,7 +321,7 @@ module: session
 paths:
   - package.json
 last_verified_commit: $commit
-updated: $date
+updated: $timestamp
 tags:
   - project
   - session
@@ -315,7 +336,7 @@ Detected $($stackLabels -join ', ') and generated first-pass project notes from 
 
 ## Files and verification
 
-- Repository: ``$repo``
+- Repository identity: ``$repoIdentity``
 - Source files counted under ``src\``: $($sourceFiles.Count)
 - The generated notes are structural and require source review before they can be treated as verified behavior.
 
@@ -328,7 +349,7 @@ Detected $($stackLabels -join ', ') and generated first-pass project notes from 
 
 Read ``overview.md`` and inspect the listed source modules, then replace bootstrap observations with verified responsibilities and APIs.
 "@
-Write-Utf8File (Join-Path $sessionDir "$date.md") $session
+Write-Utf8File (Join-Path $sessionDir ("{0}_{1}.md" -f $date, $machineId)) $session
 
 $indexPath = Join-Path $vault '00-INDEX.md'
 if (-not (Test-Path -LiteralPath $indexPath)) {
@@ -339,7 +360,7 @@ module: all
 paths:
   - projects/
 last_verified_commit: $commit
-updated: $date
+updated: $timestamp
 tags:
   - context
   - index

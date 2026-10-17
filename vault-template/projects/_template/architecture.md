@@ -4,7 +4,7 @@ module: architecture
 paths:
   - "{{repo_relative_paths_for_architecture}}"
 last_verified_commit: "{{commit}}"
-updated: "{{date}}"
+updated: "{{timestamp}}"
 tags:
   - project
   - architecture

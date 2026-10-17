@@ -4,7 +4,7 @@ module: "{{stack_slug}}"
 paths:
   - "{{source_or_manifest_paths}}"
 last_verified_commit: "{{commit_or_source_version}}"
-updated: "{{date}}"
+updated: "{{timestamp}}"
 tags:
   - stack
 summary: "Reusable, version-aware setup and troubleshooting notes for {{stack_name}} on Windows."

@@ -4,7 +4,7 @@ module: decision
 paths:
   - "{{affected_repo_paths}}"
 last_verified_commit: "{{commit}}"
-updated: "{{date}}"
+updated: "{{timestamp}}"
 tags:
   - project
   - adr

@@ -19,3 +19,9 @@ This file records reversible implementation choices that resolve details not ful
 - Decision: `validate.ps1` validates JSON Schema metadata and recursively enforces types, required properties, enums, constants, string length/pattern, and additional-property rules for the machine config defaults.
 - Reason: the repository must validate under stock Windows PowerShell without installing a schema-validation module.
 - Reversal: replace the internal validator with a full JSON Schema implementation if a dependency-free implementation becomes available; the checked-in schema remains the contract.
+
+## D-004 — Note updates use ISO timestamps and a section-scoped locked replacement
+
+- Decision: generated `updated` metadata uses ISO 8601 timestamps with a local offset. The context update helper locks the note, rereads its timestamp, refuses writes based on an older observation, changes only one heading section plus the timestamp, and replaces the file from a same-directory temporary file.
+- Reason: day-only timestamps cannot order two edits on the same day, and broad rewrites increase the chance of losing another machine's note changes.
+- Reversal: retain the timestamps and section boundaries while changing the lock or replacement implementation if cross-platform evidence requires it.

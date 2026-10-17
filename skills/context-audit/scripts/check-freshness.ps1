@@ -11,6 +11,13 @@ $ErrorActionPreference = 'Stop'
 $repo = [IO.Path]::GetFullPath($RepoPath)
 $note = [IO.Path]::GetFullPath($NotePath)
 if (-not (Test-Path -LiteralPath $repo -PathType Container)) { throw "Repository does not exist: $repo" }
+$resolverCandidates = @()
+if ($env:USERPROFILE) { $resolverCandidates += Join-Path $env:USERPROFILE '.hd-skill\scripts\Resolve-HdSkillConfig.ps1' }
+if ($env:HD_SKILL_HOME) { $resolverCandidates += Join-Path $env:HD_SKILL_HOME 'scripts\Resolve-HdSkillConfig.ps1' }
+$resolverCandidates += [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\..\..\scripts\Resolve-HdSkillConfig.ps1'))
+$resolverPath = $resolverCandidates | Where-Object { Test-Path -LiteralPath $_ -PathType Leaf } | Select-Object -First 1
+if (-not $resolverPath) { throw 'Resolve-HdSkillConfig.ps1 was not found. Install hd-skill or set HD_SKILL_HOME.' }
+$null = & $resolverPath -RepoRoot $repo -NonInteractive | ConvertFrom-Json -ErrorAction Stop
 if (-not (Test-Path -LiteralPath $note -PathType Leaf)) { throw "Note does not exist: $note" }
 $content = [IO.File]::ReadAllText($note, [Text.UTF8Encoding]::new($false, $true))
 $lines = [regex]::Split($content, "`r`n|`n|`r")

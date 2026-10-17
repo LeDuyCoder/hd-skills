@@ -7,14 +7,15 @@ description: Build a first-pass context store for a new repository. Use when onb
 
 ## Procedure
 
-1. Locate the repository root and inspect manifests before reading broad source trees. Run `scripts\detect-stack.ps1 -RepoPath <repo>` to identify candidate stacks. The detector reports all recognized manifests; a monorepo may have several stacks.
-2. Run `scripts\bootstrap-context.ps1 -RepoPath <repo> -OutputRoot <vault-root> -ProjectName <name>`. Use `D:\Obsidian\DevBrain` only when it is readable and writable; otherwise target `<repo>\.context\`.
-3. The script creates a structural first pass: `00-INDEX.md`, `overview.md`, `architecture.md`, module inventory notes under `modules\`, `gotchas.md`, a decisions index, and a dated session note. It does not invent an ADR. Existing notes are never overwritten; resolve any collision by reading and updating them deliberately.
-4. Read the relevant entry points, core modules, configuration, tests, and manifests. Replace inventory statements with verified responsibilities, APIs, dependencies, and data flows. Do not infer runtime direction from folder names.
-5. Include only commands that appear in project manifests or that you actually ran. Record the exact PowerShell form, prerequisites, and pass result in `overview.md`. Do not invent a universal test/lint/build command.
-6. Compare `last_verified_commit` against actual Git history after reviewing source. If there is no commit, use `unverified`. List relative paths for the source evidence each note describes.
-7. Review stack knowledge separately. Link an existing `stacks/<stack>.md` when relevant. Propose a project-specific stack skill under `<repo>\.agents\skills\` only if the project has repeatable conventions not covered by the shared skills. Describe the proposed skill's trigger and scope; do not silently generate unrelated global skills.
-8. Update `00-INDEX.md` with the project link, check it remains under 150 lines, and ensure all generated paths use Markdown-friendly relative paths.
+1. Locate the repository root, then run the shared `Resolve-HdSkillConfig.ps1` before reading project files. Use its JSON `vaultPath`, `contextMode`, and `machineId`; resolve the script from the installed user-level hd-skill home. Do not assume any vault location.
+2. Inspect manifests before reading broad source trees. Run `scripts\detect-stack.ps1 -RepoPath <repo>` to identify candidate stacks. The detector reports recognized manifests; a monorepo may have several stacks.
+3. Run `scripts\bootstrap-context.ps1 -RepoPath <repo> -OutputRoot <resolved-vaultPath> -ProjectName <name>`. The helper invokes the resolver itself before reading or writing. Use the repo fallback only when that is what the resolver selected or when the selected vault is inaccessible.
+4. The script creates a structural first pass: `00-INDEX.md`, `overview.md`, `architecture.md`, module inventory notes under `modules\`, `gotchas.md`, a decisions index, and a machine-specific session note. It does not invent an ADR. Existing notes are never overwritten; resolve any collision by rereading the current note and updating only the relevant section.
+5. Read relevant entry points, core modules, configuration, tests, and manifests. Replace inventory statements with verified responsibilities, APIs, dependencies, and data flows. Do not infer runtime direction from folder names.
+6. Include only commands found in project manifests or actually run. Record verified PowerShell forms and prerequisites in `overview.md`; do not invent build or test commands.
+7. Compare `last_verified_commit` against actual Git history after reviewing source. If there is no commit, use `unverified`. List relative repository paths for evidence and identify the project by a normalized Git remote or relative name, never a local absolute path.
+8. Review stack knowledge separately. Link an existing `stacks/<stack>.md` when relevant. Propose a project-specific stack skill under `<repo>\.agents\skills\` only if repeatable conventions are not covered by shared skills.
+9. Update `00-INDEX.md` with the project link, keep it below 150 lines, and ensure generated paths are Markdown-friendly and relative.
 
 ## Stack detection
 

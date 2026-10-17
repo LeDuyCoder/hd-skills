@@ -5,7 +5,7 @@ paths:
   - projects/
   - stacks/
 last_verified_commit: unverified
-updated: 2026-10-17
+updated: "{{timestamp}}"
 tags:
   - context
   - index

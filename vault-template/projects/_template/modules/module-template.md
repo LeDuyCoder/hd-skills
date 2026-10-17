@@ -4,7 +4,7 @@ module: "{{module_slug}}"
 paths:
   - "{{repo_relative_path}}"
 last_verified_commit: "{{commit}}"
-updated: "{{date}}"
+updated: "{{timestamp}}"
 tags:
   - project
   - module

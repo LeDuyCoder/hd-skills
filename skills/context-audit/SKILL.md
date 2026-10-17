@@ -7,8 +7,8 @@ description: Audit project notes for stale claims. Use when a code change may ha
 
 ## Procedure
 
-1. Select the configured vault if accessible; otherwise inspect `<repo>\.context\`. List project notes with frontmatter fields `paths` and `last_verified_commit`.
-2. For each note, run `scripts\check-freshness.ps1 -RepoPath <repo> -NotePath <note>`. The helper checks `git log <last_verified_commit>..HEAD -- <listed paths>` and prints `[FRESH]`, `[STALE]`, or an error.
+1. Before reading notes, run the shared `Resolve-HdSkillConfig.ps1` with `-RepoRoot <repo>` and inspect its `vaultPath` and `contextMode`. List notes only in that selected store and read their `paths` and `last_verified_commit` frontmatter.
+2. For each note, run `scripts\check-freshness.ps1 -RepoPath <repo> -NotePath <note>`. The helper invokes the resolver before reading the note, checks `git log <last_verified_commit>..HEAD -- <listed paths>`, and prints `[FRESH]`, `[STALE]`, or an error.
 3. Treat a missing/unreachable commit, absent path list, uncommitted change, or `unverified` marker as requiring manual inspection. The script detects committed history only; separately inspect the working tree with `git status --short` and compare relevant diff paths.
 4. For a stale note, inspect only the changed paths that overlap its `paths`. Update affected statements after checking source. If the note is still accurate, verify that explicitly and advance its commit marker; otherwise correct it first.
 5. Do not update notes as part of an audit unless asked or already authorized by the task. Report stale note paths, related commits/source paths, and the next evidence needed.

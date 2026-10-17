@@ -4,7 +4,7 @@ module: session
 paths:
   - "{{paths_changed_or_inspected}}"
 last_verified_commit: "{{commit}}"
-updated: "{{date}}"
+updated: "{{timestamp}}"
 tags:
   - project
   - session
