@@ -13,17 +13,17 @@
 
 - Status: implemented and verified; milestone commit pending.
 - Implemented: required top-level directories; `.gitignore`; `scripts\validate.ps1`; `tests\verify-m1.ps1`.
-- Verification: `powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tests\verify-m1.ps1` passed. It confirmed empty-tree success, >300-character description warning without failure, and correct errors for malformed frontmatter, missing description, folder/name mismatch, >300 body lines, and UTF-8 BOM.
-- Commit: `dc30e3f feat(m1): add portable skill validator`.
+- Verification: `powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tests\verify-m1.ps1` passed. It confirmed empty-tree success, >300-character description warning without failure, and correct errors for malformed frontmatter, missing description, folder/name mismatch, duplicate name, >300 body lines, and UTF-8 BOM.
+- Commits: `dc30e3f feat(m1): add portable skill validator`; `d5d12d6 feat(m1): verify duplicate skill names`.
 - Remaining: none; M1 is complete.
 
 ## M2 — Context memory system
 
-- Status: implementation and checks complete; milestone commit and durable fixture output pending.
-- Implemented: note templates for index, overview, architecture, module, ADR, gotchas, session, and stack; context-load/update/bootstrap/audit/session-handoff skills; stack detector, context bootstrap generator, freshness checker; a small Node fixture and M2 verification harness.
-- Verification: `powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tests\verify-m2.ps1` passed stack detection, package script extraction, note generation, no-BOM UTF-8 output, and fresh/stale Git path checks. `npm --prefix .\tests\fixtures\demo-node test` passed. The start command first exposed a Windows-specific CLI entry comparison bug; switching to `pathToFileURL` fixed it, and start now prints `Hello, world!`.
-- Commit: pending.
-- Remaining: commit the Windows fixture fix and capture the reviewed fixture notes in a reviewable output tree with the committed source revision in frontmatter.
+- Status: implementation and checks complete; final code/doc commit and durable fixture output pending.
+- Implemented: note templates for index, overview, architecture, module, ADR, gotchas, session, and stack; context-load/update/bootstrap/audit/session-handoff skills; stack detector, context bootstrap generator, freshness checker; a small Node fixture and M2 verification harness. Decisions index output uses the standard note frontmatter.
+- Verification: `powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tests\verify-m2.ps1` passed stack detection, package script extraction, note generation, standard note frontmatter, no-BOM UTF-8 output, and fresh/stale Git path checks. `npm --prefix .\tests\fixtures\demo-node test` passed; `npm --prefix .\tests\fixtures\demo-node start` printed `Hello, world!`. All 7 reviewed generated notes pass the path-scoped freshness check against fixture commit `3b413f5`.
+- Commits: `540c834 feat(m2): add context memory skills`; `3b413f5 fix(m2): make fixture entry check Windows-safe`; bootstrap metadata follow-up pending.
+- Remaining: commit the decisions-frontmatter fix, expanded validation coverage, and reviewed fixture notes, then stop for user review.
 
 ## Decisions made during implementation
 

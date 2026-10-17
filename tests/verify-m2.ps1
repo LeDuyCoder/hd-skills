@@ -33,6 +33,7 @@ try {
     $overview = [IO.File]::ReadAllText($overviewPath, [Text.UTF8Encoding]::new($false, $true))
     $architecture = [IO.File]::ReadAllText((Join-Path $projectNotes 'architecture.md'), [Text.UTF8Encoding]::new($false, $true))
     $moduleNote = [IO.File]::ReadAllText((Join-Path $projectNotes 'modules\src.md'), [Text.UTF8Encoding]::new($false, $true))
+    $decisions = [IO.File]::ReadAllText((Join-Path $projectNotes 'decisions\README.md'), [Text.UTF8Encoding]::new($false, $true))
     $sessionPath = Join-Path $projectNotes ('sessions\' + (Get-Date -Format 'yyyy-MM-dd') + '.md')
     $session = [IO.File]::ReadAllText($sessionPath, [Text.UTF8Encoding]::new($false, $true))
     $index = [IO.File]::ReadAllText((Join-Path $outputRoot '00-INDEX.md'), [Text.UTF8Encoding]::new($false, $true))
@@ -42,6 +43,13 @@ try {
     if ($architecture -notmatch '```mermaid' -or $moduleNote -notmatch 'src/index.js' -or $index -notmatch 'projects/demo-node/overview' -or $session -notmatch 'context bootstrap') {
         throw 'One or more generated notes are missing expected content.'
     }
+    foreach ($file in Get-ChildItem -LiteralPath $projectNotes -Filter '*.md' -File -Recurse) {
+        $note = [IO.File]::ReadAllText($file.FullName, [Text.UTF8Encoding]::new($false, $true))
+        if ($note -notmatch '(?ms)^---\r?\n(?=.*?^project:\s*\S)(?=.*?^module:\s*\S)(?=.*?^paths:)(?=.*?^last_verified_commit:\s*\S)(?=.*?^updated:\s*\d{4}-\d{2}-\d{2})(?=.*?^tags:)(?=.*?^summary:\s*\S).*?^---\r?\n') {
+            throw "Generated project note is missing standard frontmatter: $($file.FullName)"
+        }
+    }
+    if ($decisions -notmatch '(?ms)^---\r?\n.*?^module: decisions.*?^---\r?\n') { throw 'Decision index must carry standard note frontmatter.' }
     foreach ($file in Get-ChildItem -LiteralPath $outputRoot -File -Recurse) {
         $bytes = [IO.File]::ReadAllBytes($file.FullName)
         if ($bytes.Length -ge 3 -and $bytes[0] -eq 0xEF -and $bytes[1] -eq 0xBB -and $bytes[2] -eq 0xBF) {
@@ -62,7 +70,8 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'Could not commit the temporary source file.' }
     $firstCommit = (& git -C $auditRepo rev-parse HEAD).Trim()
     $auditNote = Join-Path $tempRoot 'audit-note.md'
-    $auditText = "---`nproject: audit`nmodule: src`npaths:`n  - src/greeting.js`nlast_verified_commit: $firstCommit`nupdated: 2026-10-17`ntags:`n  - audit`nsummary: Audit helper fixture.`n---`n# Audit fixture`n"
+    $auditDate = Get-Date -Format 'yyyy-MM-dd'
+    $auditText = "---`nproject: audit`nmodule: src`npaths:`n  - src/greeting.js`nlast_verified_commit: $firstCommit`nupdated: $auditDate`ntags:`n  - audit`nsummary: Audit helper fixture.`n---`n# Audit fixture`n"
     [IO.File]::WriteAllText($auditNote, $auditText, [Text.UTF8Encoding]::new($false))
     $freshOutput = & $powershellExe -NoProfile -ExecutionPolicy Bypass -File $freshnessChecker -RepoPath $auditRepo -NotePath $auditNote 2>&1
     if ($LASTEXITCODE -ne 0 -or ($freshOutput | Out-String) -notmatch '\[FRESH\]') {
