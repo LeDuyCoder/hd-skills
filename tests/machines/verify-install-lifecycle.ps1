@@ -83,8 +83,11 @@ try {
         $beforeDryRun = Get-ProfileSnapshot $profile
         $bootstrap = Invoke-ChildScript (Join-Path $repoRoot 'bootstrap.ps1') @('-RepoRoot', $repoRoot, '-DryRun', '-NonInteractive', '-Mode', $mode)
         if ($bootstrap.ExitCode -ne 0 -or $bootstrap.Output -notmatch 'Bootstrap dry run complete') { throw "Bootstrap dry-run failed for $($definition.name): $($bootstrap.Output)" }
+        $normalizedBootstrapOutput = $bootstrap.Output -replace '\\\\', '\'
+        $expectedHomePattern = '"hdSkillHome"\s*:\s*"' + [regex]::Escape([IO.Path]::GetFullPath($skillHome)) + '"'
+        if ($normalizedBootstrapOutput -notmatch $expectedHomePattern) { throw "Bootstrap dry-run used the wrong HD_SKILL_HOME for $($definition.name): $($bootstrap.Output)" }
         Assert-SameSnapshot $beforeDryRun (Get-ProfileSnapshot $profile) "Bootstrap dry-run for $($definition.name)"
-        Write-Host "[PASS] $($definition.name): bootstrap -DryRun made no profile changes."
+        Write-Host "[PASS] $($definition.name): bootstrap -DryRun used the configured HD_SKILL_HOME and made no profile changes."
 
         $defaultInstall = Invoke-ChildScript (Join-Path $repoRoot 'install.ps1') @('-RepoRoot', $repoRoot, '-NonInteractive', '-Mode', $mode)
         if ($defaultInstall.ExitCode -ne 0 -or $defaultInstall.Output -notmatch 'Dry run complete') { throw "Default install was not read-only for $($definition.name): $($defaultInstall.Output)" }

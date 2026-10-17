@@ -33,7 +33,12 @@ if ($DryRun) {
         $installArgs = @{ RepoRoot = $installSource; Mode = $Mode; DryRun = $true; NonInteractive = $NonInteractive }
         if ($VaultPath) { $installArgs.VaultPath = $VaultPath }
         if ($WithMcp) { $installArgs.WithMcp = $true }
-        & (Join-Path $installSource 'install.ps1') @installArgs
+        $previousSkillHome = $env:HD_SKILL_HOME
+        try {
+            $env:HD_SKILL_HOME = $targetHome
+            & (Join-Path $installSource 'install.ps1') @installArgs
+        }
+        finally { $env:HD_SKILL_HOME = $previousSkillHome }
         if ($LASTEXITCODE -ne 0) { throw 'Install dry-run failed.' }
     }
     Write-Host 'Bootstrap dry run complete: no clone, pull, install, or machine configuration was changed.'
