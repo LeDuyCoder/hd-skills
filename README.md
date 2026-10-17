@@ -1,8 +1,53 @@
-# hd-skill
+# 🧠 hd-skill
 
-`hd-skill` là bộ skill dùng chung cho Codex và Google Antigravity trên Windows. Repo chứa skill, rules, mẫu note và script; cấu hình riêng của máy nằm ở `%USERPROFILE%\.hd-skill\config.json`. Repo không chứa đường dẫn vault của một máy cụ thể. Remote Git chính thức của repo này là [`LeDuyCoder/hs-skills`](https://github.com/LeDuyCoder/hs-skills).
+> **Một bộ skill, hai coding agent, bộ nhớ ngữ cảnh dùng lại được.**
+> Dành cho Windows · Viết bằng PowerShell · Cấu hình theo từng máy
 
-## Cài trên máy mới
+[![Windows](https://img.shields.io/badge/Windows-10%20%7C%2011-0078D4?logo=windows&logoColor=white)](https://www.microsoft.com/windows)
+[![PowerShell](https://img.shields.io/badge/PowerShell-5.1%2B-5391FE?logo=powershell&logoColor=white)](https://learn.microsoft.com/powershell/)
+[![Codex](https://img.shields.io/badge/Agent-Codex-111111)](https://github.com/openai/codex)
+[![Antigravity](https://img.shields.io/badge/Agent-Antigravity-4285F4)](https://antigravity.google/)
+[![Repo](https://img.shields.io/badge/GitHub-LeDuyCoder%2Fhs--skills-181717?logo=github&logoColor=white)](https://github.com/LeDuyCoder/hs-skills)
+
+`hd-skill` là bộ skill dùng chung cho Codex và Google Antigravity trên Windows. Repo chứa skill, rules, mẫu note và script; cấu hình riêng của máy nằm ở `%USERPROFILE%\.hd-skill\config.json`. Repo không chứa đường dẫn vault của một máy cụ thể.
+
+| ✨ Một nguồn chung | 🧭 Tự phát hiện | 🔒 An toàn mặc định |
+|---|---|---|
+| Cài skill từ cùng repo vào Codex và Antigravity | Chọn agent, vault và đường dẫn theo từng máy Windows | MCP tắt mặc định; DryRun, backup và uninstall có kiểm soát |
+
+## 📚 Mục lục
+
+- [Cài nhanh trên máy mới](#install)
+- [Cấu hình máy và vault](#config)
+- [Dùng với Codex](#codex)
+- [Dùng với Antigravity](#antigravity)
+- [Danh mục skill](#skills)
+- [Thêm dự án và dùng context store](#context)
+- [Thêm skill](#add-skill)
+- [Đồng bộ giữa các máy](#sync)
+- [Chẩn đoán và gỡ cài](#diagnostics)
+- [Cấu trúc repo](#layout)
+- [Xử lý sự cố](#troubleshooting)
+- [Chạy kiểm chứng](#verification)
+
+## 🔁 Luồng hoạt động
+
+```mermaid
+flowchart LR
+    A[Clone repo] --> B[bootstrap.ps1]
+    B --> C[Phát hiện agent và vault]
+    C --> D[Lưu cấu hình riêng của máy]
+    D --> E[Cài skill cho agent hiện có]
+    C --> F{Có vault phù hợp?}
+    F -->|Có| G[Obsidian vault]
+    F -->|Không| H[.context trong repo]
+```
+
+> **Mặc định:** bootstrap cài cho agent đã phát hiện; MCP không bật. Muốn xem trước, chạy `-DryRun`.
+
+<a id="install"></a>
+
+## 🚀 Cài nhanh trên máy mới
 
 Cần Git for Windows và Windows PowerShell 5.1 trở lên; PowerShell 7 được khuyến nghị. Cài Codex và/hoặc Antigravity trước. Node.js LTS chỉ cần nếu bật MCP. hd-skill không tự cài phần mềm. Lệnh một dòng sau clone repo vào thư mục người dùng rồi chạy bootstrap:
 
@@ -61,7 +106,9 @@ Ví dụ dùng bản copy:
 & .\install.ps1 -Apply -Mode Copy
 ```
 
-## Cấu hình máy và vault
+<a id="config"></a>
+
+## ⚙️ Cấu hình máy và vault
 
 Thứ tự chọn cấu hình là tham số lệnh, biến môi trường, file máy, tự phát hiện, rồi mặc định repo. Các biến được hỗ trợ:
 
@@ -106,19 +153,25 @@ MCP tắt theo mặc định; thao tác đọc/ghi file gốc của agent là ph
 
 Khi đã xem và chấp nhận kế hoạch, cài MCP tường minh bằng `install.ps1 -Apply -WithMcp`. Cấu hình chỉ cho filesystem MCP truy cập vault đã phân giải. `doctor.ps1` kiểm tra khả năng khởi động nếu MCP được bật; khi không cần MCP, để `mcpEnabled` là `false` và dùng công cụ file tích hợp của agent.
 
-## Dùng với Codex
+<a id="codex"></a>
+
+## 🤖 Dùng với Codex
 
 Các skill được đưa vào `%USERPROFILE%\.agents\skills\`. Rule toàn cục nằm trong `%USERPROFILE%\.codex\AGENTS.md` và yêu cầu agent gọi `context-load` trước khi tìm hiểu dự án. Mở repo dự án trong Codex rồi yêu cầu trực tiếp công việc; Codex sẽ chọn skill theo phần mô tả trong từng `SKILL.md`. Có thể mở `/skills` để kiểm tra danh sách.
 
 Để xác nhận đường dẫn cài và trạng thái agent từ PowerShell, dùng `doctor.ps1`. Nếu Codex đang mở khi cài skill, đóng/mở lại hoặc làm mới cửa sổ để nạp danh sách mới. Các rule toàn cục được ghép vào file `AGENTS.md` hiện có, không xóa nội dung khác.
 
-## Dùng với Antigravity
+<a id="antigravity"></a>
+
+## 🌌 Dùng với Antigravity
 
 Các skill được đưa vào `%USERPROFILE%\.gemini\config\skills\`, rule vào `%USERPROFILE%\.gemini\config\GEMINI.md`. Khởi động lại hoặc làm mới Antigravity sau cài đặt để nạp skill. Installer không tự tạo junction tới đường dẫn skill cũ.
 
 Nếu thư mục `%USERPROFILE%\.gemini\` không tồn tại, Antigravity chưa được phát hiện và installer không cài skill cho nó. Hãy cài/khởi chạy Antigravity trước rồi chạy lại `bootstrap.ps1` hoặc `install.ps1 -Apply`. Nếu đã có thư mục skill ở vị trí cũ, doctor/installer báo lại để bạn tự di chuyển; không có junction tương thích nào được tạo tự động.
 
-## Danh mục skill
+<a id="skills"></a>
+
+## 🧰 Danh mục skill
 
 | Nhóm | Skill | Dùng khi |
 |---|---|---|
@@ -130,7 +183,9 @@ Nếu thư mục `%USERPROFILE%\.gemini\` không tồn tại, Antigravity chưa 
 
 Các skill quy trình đọc lệnh test/lint/build từ overview/manifests của repo dự án; chúng không giả định mọi dự án dùng cùng một lệnh. Nếu dự án chưa có context notes, chạy `context-bootstrap` trước để tạo bản đồ ban đầu.
 
-## Thêm dự án và dùng bộ nhớ ngữ cảnh
+<a id="context"></a>
+
+## 🧠 Thêm dự án và dùng context store
 
 Trong repo dự án, chạy skill `context-bootstrap` để nhận diện stack và sinh note khởi đầu. `context-load` đọc index/overview rồi chỉ mở note liên quan; `context-audit` so `last_verified_commit` với `git log`; `context-update` cập nhật đúng phần note liên quan và từ chối ghi nếu trường `updated` cho thấy một máy khác đã ghi phiên bản mới hơn. Session note dùng tên `<yyyy-mm-dd>_<machineId>.md`. Note lưu đường dẫn repo tương đối hoặc tên remote Git, không ghi đường dẫn tuyệt đối máy.
 
@@ -146,7 +201,9 @@ Một dự án mới không cần đăng ký trước trong repo hd-skill. Chỉ
 
 Nếu cần lưu đường dẫn checkout cục bộ cho một dự án, ghi `projects` trong config riêng của máy. Không commit config đó.
 
-## Thêm skill
+<a id="add-skill"></a>
+
+## ✍️ Thêm skill
 
 Tạo `skills/<skill-name>/SKILL.md` với YAML frontmatter `name` và `description`. `name` phải bằng tên thư mục; nội dung dưới 300 dòng; UTF-8 không BOM. Description dài hơn 300 ký tự sẽ được cảnh báo. Có thể đặt script PowerShell riêng bên trong thư mục skill. Kiểm tra trước khi commit:
 
@@ -165,7 +222,9 @@ git status --short
 
 Hãy giữ `description` ngắn, mô tả tác vụ/điều kiện kích hoạt rõ; validator cảnh báo khi dài hơn 300 ký tự. Thân skill tối đa 300 dòng. Script hỗ trợ nên là PowerShell đặt trong `skills/<name>/scripts/`, không chứa đường dẫn riêng của một máy.
 
-## Đồng bộ giữa các máy
+<a id="sync"></a>
+
+## 🔄 Đồng bộ giữa các máy
 
 Repo hd-skill đồng bộ qua Git. Chạy `update.ps1 -DryRun` để xem kế hoạch, rồi `update.ps1 -Apply` để pull, validate và cài lại; cấu hình máy được giữ nguyên.
 
@@ -190,7 +249,9 @@ Session của mỗi máy dùng `machineId` riêng. Các cập nhật context ch�
 
 Không chạy hai lần cập nhật cạnh tranh trên cùng section nếu bạn đang offline và hai máy chưa đồng bộ. Tên session theo machine ID giảm va chạm giữa nhật ký, nhưng không thay thế cơ chế đồng bộ của vault. Sao lưu vault theo chính sách riêng của bạn; installer, updater và uninstaller không tự xóa hoặc đồng bộ note vault.
 
-## Chẩn đoán và gỡ cài
+<a id="diagnostics"></a>
+
+## 🩺 Chẩn đoán và gỡ cài
 
 ```powershell
 & .\doctor.ps1
@@ -211,7 +272,9 @@ Uninstall giữ checkout repo để bạn có thể cài lại; xóa `install-st
 
 `doctor.ps1` không sửa trạng thái. Nếu báo skill thiếu/sai target, chạy `install.ps1 -DryRun` để xem nguyên nhân, sau đó cài lại đúng mode. Nếu config JSON không hợp lệ, backup file rồi sửa dựa trên `config.schema.json`; không xóa config nếu còn `projects` hoặc lựa chọn vault bạn cần.
 
-## Cấu trúc repo
+<a id="layout"></a>
+
+## 🗂️ Cấu trúc repo
 
 ```text
 config/                  Mẫu cấu hình MCP được điền đường dẫn lúc cài
@@ -236,7 +299,9 @@ vault-template/          Mẫu cấu trúc context store
 
 Không có bước nào tự cài phần mềm. MCP filesystem là tuỳ chọn và không được bật bởi cài mặc định.
 
-## Xử lý sự cố
+<a id="troubleshooting"></a>
+
+## 🛠️ Xử lý sự cố
 
 | Triệu chứng | Kiểm tra và cách xử lý |
 |---|---|
@@ -253,7 +318,9 @@ Không có bước nào tự cài phần mềm. MCP filesystem là tuỳ chọn 
 | Config máy JSON không parse được | Sao chép file lỗi sang backup riêng trước; so với `config.schema.json` và `config.defaults.json`. Chạy `doctor.ps1` để nhận hướng sửa. Không xóa file trước khi lưu `projects`, vault và machine ID cần giữ. |
 | `context-update` từ chối stale write | Đọc lại note mới nhất, đối chiếu `updated`, rồi lặp lại thay đổi trên section liên quan. Không thay toàn bộ file bằng bản cũ từ máy khác. |
 
-## Chạy kiểm chứng từ checkout
+<a id="verification"></a>
+
+## ✅ Chạy kiểm chứng từ checkout
 
 Các kiểm tra dưới đây chỉ thao tác trên repo và fixture cô lập; lifecycle suite tạo/xóa profile tạm, không cài lên tài khoản thật:
 

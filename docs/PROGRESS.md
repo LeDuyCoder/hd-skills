@@ -65,6 +65,7 @@ The approved Multi-machine amendment is in `docs\PHASE-2-ARCHITECTURE.md`. The w
 
 - Remote `origin` được cấu hình theo URL người dùng cung cấp: `https://github.com/LeDuyCoder/hs-skills.git`. Remote trống trước khi push; không có lịch sử phía server cần merge.
 - README được mở rộng lên hướng dẫn chi tiết gồm remote chính thức, lệnh cài một dòng, chế độ DryRun/Apply, tham số cài, thứ tự cấu hình, Codex/Antigravity, nhóm skill, context workflow, đồng bộ vault, cập nhật, gỡ cài, cấu trúc repo, kiểm chứng và bảng xử lý sự cố.
+- Bản trình bày mới thêm badge nền tảng/agent, mục lục nhảy nhanh, sơ đồ Mermaid luồng cài và biểu tượng nhất quán cho các phần; nội dung hướng dẫn được giữ nguyên.
 - Kiểm chứng sau sửa README: 15 khối PowerShell parse được; validator pass 19 skills/schema/defaults; `git diff --check` không báo lỗi. Toàn bộ lịch sử đã push lên `origin/master`; M6 cài thật vẫn chờ xác nhận riêng.
 
 No real-machine installation or vault write has occurred. PowerShell 7 is absent; verification is currently using Windows PowerShell 5.1 unless a portable/test-only PowerShell 7 executable becomes available. M6 actions remain constrained by the approved backup and no-MCP/no-real-vault rules.
