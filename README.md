@@ -205,6 +205,35 @@ Nếu thư mục `%USERPROFILE%\.gemini\` không tồn tại, Antigravity chưa 
 | Git/CI | `git-workflow`, `pull-request`, `fix-ci`, `dependency-upgrade` | Thao tác Git, chuẩn bị PR, sửa CI và cập nhật dependency. |
 | Windows/meta | `windows-shell`, `skill-improve`, `stack-skill-generator` | Làm việc an toàn với PowerShell, cải tiến skill và tạo skill theo stack. |
 
+### Lệnh `/hd`
+
+Skill `hd` là bộ định tuyến lệnh: gõ `hd` kèm một lệnh con, và nó chuyển việc sang đúng skill. Trong Antigravity gõ `/hd`, trong Codex gõ `$hd` (Codex không hỗ trợ slash command cấp dự án nên gọi skill bằng `$`). Gõ `/hd` không kèm gì để xem menu.
+
+```text
+/hd                       hiện menu lệnh
+/hd init                  tạo context notes cho dự án (context-bootstrap)
+/hd plan thêm đăng nhập   lập kế hoạch (planning)
+/hd debug test login fail tìm nguyên nhân lỗi (systematic-debugging)
+/hd review                rà soát thay đổi hiện tại (code-review)
+/hd save                  ghi lại thay đổi quan trọng (context-update)
+/hd sửa lỗi build         không khớp lệnh nào → tự chọn skill phù hợp nhất
+```
+
+| Lệnh | Skill | | Lệnh | Skill |
+|---|---|---|---|---|
+| `init` | `context-bootstrap` | | `review` | `code-review` |
+| `load` | `context-load` | | `refactor` | `refactoring` |
+| `save` | `context-update` | | `security` | `security-review` |
+| `audit` | `context-audit` | | `git` | `git-workflow` |
+| `handoff` | `session-handoff` | | `pr` | `pull-request` |
+| `plan` | `planning` | | `ci` | `fix-ci` |
+| `tdd` | `tdd` | | `deps` | `dependency-upgrade` |
+| `debug` | `systematic-debugging` | | `shell` | `windows-shell` |
+| `verify` | `verification-before-done` | | `stack` | `stack-skill-generator` |
+| | | | `improve` | `skill-improve` |
+
+Bí danh và mô tả từng lệnh nằm trong [skills/hd/SKILL.md](skills/hd/SKILL.md). Mỗi skill vẫn gọi trực tiếp được: `/tdd` trong Antigravity, `$tdd` trong Codex. Sau khi cài hoặc cập nhật, khởi động lại agent để nạp skill `hd`.
+
 Các skill quy trình đọc lệnh test/lint/build từ overview/manifests của repo dự án; chúng không giả định mọi dự án dùng cùng một lệnh. Nếu dự án chưa có context notes, chạy `context-bootstrap` trước để tạo bản đồ ban đầu.
 
 <a id="context"></a>
