@@ -19,11 +19,11 @@
 
 ## M2 — Context memory system
 
-- Status: implementation and checks complete; final code/doc commit and durable fixture output pending.
+- Status: complete; stopped at the requested review gate.
 - Implemented: note templates for index, overview, architecture, module, ADR, gotchas, session, and stack; context-load/update/bootstrap/audit/session-handoff skills; stack detector, context bootstrap generator, freshness checker; a small Node fixture and M2 verification harness. Decisions index output uses the standard note frontmatter.
-- Verification: `powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tests\verify-m2.ps1` passed stack detection, package script extraction, note generation, standard note frontmatter, no-BOM UTF-8 output, and fresh/stale Git path checks. `npm --prefix .\tests\fixtures\demo-node test` passed; `npm --prefix .\tests\fixtures\demo-node start` printed `Hello, world!`. All 7 reviewed generated notes pass the path-scoped freshness check against fixture commit `3b413f5`.
-- Commits: `540c834 feat(m2): add context memory skills`; `3b413f5 fix(m2): make fixture entry check Windows-safe`; bootstrap metadata follow-up pending.
-- Remaining: commit the decisions-frontmatter fix, expanded validation coverage, and reviewed fixture notes, then stop for user review.
+- Verification: `powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tests\verify-m2.ps1` passed stack detection, package script extraction, note generation, standard note frontmatter, no-BOM UTF-8 output, and fresh/stale Git path checks. `powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\validate.ps1 -RootPath .\skills` passed (5 skills, 0 warnings). `npm --prefix .\tests\fixtures\demo-node test` passed; `npm --prefix .\tests\fixtures\demo-node start` printed `Hello, world!`. All 7 reviewed generated notes have valid frontmatter/UTF-8, the index is 18 lines, and every note passes path-scoped freshness against fixture commit `3b413f5`.
+- Commits: `540c834 feat(m2): add context memory skills`; `3b413f5 fix(m2): make fixture entry check Windows-safe`; `45b9471 feat(m2): standardize generated note metadata`; final reviewed fixture output and progress are committed as `feat(m2): record reviewed bootstrap fixture notes`.
+- Remaining: none. M3–M6 have not been started. M6 installation remains gated on your explicit approval as requested.
 
 ## Decisions made during implementation
 
