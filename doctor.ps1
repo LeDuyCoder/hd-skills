@@ -31,14 +31,16 @@ try {
     $machineConfig = Get-Content -LiteralPath $resolved.configPath -Raw -Encoding UTF8 | ConvertFrom-Json -ErrorAction Stop
     $required = @('schemaVersion', 'vaultName', 'vaultPath', 'contextMode', 'agents', 'machineId', 'projects', 'mcpEnabled')
     $missing = @($required | Where-Object { -not ($machineConfig.PSObject.Properties.Name -contains $_) })
-    $allowedKeys = $required + @('hdSkillHome')
+    $allowedKeys = $required + @('hdSkillHome', 'selectedAgents')
+    $agentValuesValid = $machineConfig.agents -is [pscustomobject]
+    if ($agentValuesValid) { foreach ($agentProperty in $machineConfig.agents.PSObject.Properties) { if ($agentProperty.Value -isnot [bool]) { $agentValuesValid = $false } } }
     $unknown = @($machineConfig.PSObject.Properties.Name | Where-Object { $_ -notin $allowedKeys })
     $projectValuesValid = $true
     foreach ($projectProperty in $machineConfig.projects.PSObject.Properties) { if ($projectProperty.Value -isnot [string] -or [string]::IsNullOrWhiteSpace($projectProperty.Value)) { $projectValuesValid = $false } }
     $validTypes = ($machineConfig.vaultName -is [string] -and -not [string]::IsNullOrWhiteSpace($machineConfig.vaultName)) -and
         (($null -eq $machineConfig.vaultPath) -or $machineConfig.vaultPath -is [string]) -and
         ($machineConfig.contextMode -in @('vault', 'repo')) -and
-        ($machineConfig.agents.codex -is [bool] -and $machineConfig.agents.antigravity -is [bool]) -and
+        $agentValuesValid -and
         ($machineConfig.machineId -is [string] -and $machineConfig.machineId -match '^[A-Za-z0-9][A-Za-z0-9_-]{1,31}$') -and
         ($machineConfig.projects -is [pscustomobject] -and $projectValuesValid) -and
         ($machineConfig.mcpEnabled -is [bool])
@@ -75,10 +77,12 @@ if ($state) {
             else { Add-Check "Skill $($entry.agent)/$($entry.name)" 'PASS' 'All managed copy files match the manifest.' }
         }
     }
-    foreach ($agentName in @('codex', 'antigravity')) {
+    foreach ($registryEntry in @($resolved.detected.registry)) {
+        $agentName = [string]$registryEntry.id
         $agentInstalled = [bool]$resolved.agents.$agentName
-        if (-not $agentInstalled) { Add-Check "$agentName visibility" 'SKIP' 'Agent is not installed on this machine.'; continue }
-        $entries = @($state.skills | Where-Object { $_.agent -eq $agentName })
+        if (-not $agentInstalled) { Add-Check "$agentName visibility" 'SKIP' 'Agent is not selected or not installed on this machine.'; continue }
+        $agentSkillsRoot = [IO.Path]::GetFullPath((Join-Path $profileRoot ([string]$registryEntry.global.skillsPath))).TrimEnd('\')
+        $entries = @($state.skills | Where-Object { (Split-Path -Parent ([string]$_.target)).TrimEnd('\') -ieq $agentSkillsRoot })
         if ($entries.Count -gt 0 -and @($entries | Where-Object { Test-Path -LiteralPath $_.target }).Count -eq $entries.Count) { Add-Check "$agentName visibility" 'PASS' "$($entries.Count) shared skills are present in the detected skill directory." }
         else { Add-Check "$agentName visibility" 'FAIL' 'One or more skills are missing from the detected agent directory.' 'Run install.ps1 -Apply.' }
     }

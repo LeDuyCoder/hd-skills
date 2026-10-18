@@ -2,6 +2,7 @@
 param(
     [Parameter()] [string] $RepoRoot = (Join-Path $PSScriptRoot '..'),
     [Parameter()] [string] $VaultPath,
+    [Parameter()] [string[]] $Agents,
     [Parameter()] [string] $HdSkillHome,
     [Parameter()] [string] $ConfigPath,
     [Parameter()] [switch] $PersistConfig,
@@ -41,7 +42,26 @@ elseif ($machineConfig -and $machineConfig.vaultPath) { $effectiveVaultPath = [s
 
 $vaultName = if ($machineConfig -and $machineConfig.vaultName) { [string]$machineConfig.vaultName } else { [string]$defaults.vaultName }
 $contextMode = if ($machineConfig -and $machineConfig.contextMode) { [string]$machineConfig.contextMode } else { [string]$defaults.contextMode }
-$agents = [ordered]@{ codex = [bool]$detected.codex.installed; antigravity = [bool]$detected.antigravity.installed }
+# Agent selection: -Agents, then HD_SKILL_AGENTS, then the saved selectedAgents; without any of them, detected agents are used.
+$knownAgentIds = @($detected.registry | ForEach-Object { [string]$_.id })
+$selectedAgents = $null
+$requestedAgents = if ($Agents) { $Agents } elseif ($env:HD_SKILL_AGENTS) { @($env:HD_SKILL_AGENTS) } else { $null }
+if ($requestedAgents) {
+    $selectedAgents = @($requestedAgents | ForEach-Object { ([string]$_) -split '[,;\s]+' } | Where-Object { $_ } | ForEach-Object { $_.Trim().ToLowerInvariant() } | Select-Object -Unique)
+    if ($selectedAgents -contains 'detected' -or $selectedAgents -contains 'auto') { $selectedAgents = $null }
+    elseif ($selectedAgents -contains 'all') { $selectedAgents = $knownAgentIds }
+}
+elseif ($machineConfig -and ($machineConfig.PSObject.Properties.Name -contains 'selectedAgents') -and $null -ne $machineConfig.selectedAgents) {
+    $selectedAgents = @($machineConfig.selectedAgents | ForEach-Object { [string]$_ })
+}
+if ($null -ne $selectedAgents) {
+    $unknownAgents = @($selectedAgents | Where-Object { $_ -notin $knownAgentIds })
+    if ($unknownAgents.Count -gt 0) { throw ("Unknown agent id(s): {0}. Known agents: {1}. Add custom agents to %USERPROFILE%\.hd-skillgents.custom.json." -f ($unknownAgents -join ', '), ($knownAgentIds -join ', ')) }
+}
+$agentMap = [ordered]@{}
+foreach ($agentId in $knownAgentIds) {
+    $agentMap[$agentId] = if ($null -ne $selectedAgents) { $agentId -in $selectedAgents } else { [bool]$detected.agents.$agentId }
+}
 
 if (-not $effectiveVaultPath) {
     $vaults = @($detected.obsidian.vaults)
@@ -93,12 +113,13 @@ $config = [ordered]@{
     vaultName = $vaultName
     vaultPath = if ($contextMode -eq 'vault') { $effectiveVaultPath } else { $null }
     contextMode = $contextMode
-    agents = $agents
+    agents = $agentMap
     machineId = $machineId
     projects = if ($machineConfig -and $machineConfig.projects) { $machineConfig.projects } else { $defaults.projects }
     mcpEnabled = [bool]($machineConfig -and $machineConfig.mcpEnabled)
     hdSkillHome = $resolvedHome
 }
+if ($null -ne $selectedAgents) { $config.selectedAgents = @($selectedAgents) }
 if ($PersistConfig) {
     $configDir = Split-Path -Parent $machineConfigPath
     if (-not (Test-Path -LiteralPath $configDir -PathType Container)) { New-Item -ItemType Directory -Path $configDir -Force | Out-Null }
@@ -109,7 +130,8 @@ if ($PersistConfig) {
 [pscustomobject]@{
     vaultPath = $effectiveVaultPath
     contextMode = $contextMode
-    agents = [pscustomobject]$agents
+    agents = [pscustomobject]$agentMap
+    selectedAgents = $selectedAgents
     machineId = $machineId
     hdSkillHome = $resolvedHome
     configPath = $machineConfigPath

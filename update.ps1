@@ -2,6 +2,7 @@
 param(
     [Parameter()] [string] $RepoRoot = $PSScriptRoot,
     [Parameter()] [string] $VaultPath,
+    [Parameter()] [string[]] $Agents,
     [Parameter()] [ValidateSet('Junction', 'Copy')] [string] $Mode = 'Junction',
     [Parameter()] [switch] $DryRun = $true,
     [Parameter()] [switch] $NonInteractive,
@@ -16,6 +17,7 @@ if ($DryRun) {
     Write-Host "[PLAN] git pull --ff-only in $repo"
     $args = @{ RepoRoot = $repo; Mode = $Mode; DryRun = $true; NonInteractive = $NonInteractive }
     if ($VaultPath) { $args.VaultPath = $VaultPath }
+    if ($Agents) { $args.Agents = $Agents }
     if ($WithMcp) { $args.WithMcp = $true }
     & (Join-Path $repo 'install.ps1') @args
     exit $LASTEXITCODE
@@ -33,6 +35,7 @@ if ($pullExitCode -ne 0) { throw 'git pull --ff-only failed; inspect local chang
 if ($LASTEXITCODE -ne 0) { throw 'Validation failed after pull; installation was not changed.' }
 $installArgs = @{ RepoRoot = $repo; Mode = $Mode; Apply = $true; NonInteractive = $NonInteractive }
 if ($VaultPath) { $installArgs.VaultPath = $VaultPath }
+if ($Agents) { $installArgs.Agents = $Agents }
 if ($WithMcp) { $installArgs.WithMcp = $true }
 & (Join-Path $repo 'install.ps1') @installArgs
 if ($LASTEXITCODE -ne 0) { throw 'Reinstallation failed after the repository update.' }

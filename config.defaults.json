@@ -5,7 +5,8 @@
   "contextMode": "repo",
   "agents": {
     "codex": false,
-    "antigravity": false
+    "antigravity": false,
+    "claude": false
   },
   "machineId": "unconfigured",
   "projects": {},

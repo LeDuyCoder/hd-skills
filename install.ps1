@@ -2,6 +2,7 @@
 param(
     [Parameter()] [string] $RepoRoot = $PSScriptRoot,
     [Parameter()] [string] $VaultPath,
+    [Parameter()] [string[]] $Agents,
     [Parameter()] [ValidateSet('Junction', 'Copy')] [string] $Mode = 'Junction',
     [Parameter()] [switch] $WithMcp,
     [Parameter()] [switch] $NonInteractive,
@@ -19,17 +20,23 @@ if ($LASTEXITCODE -ne 0) { throw 'Skill/config validation failed; installation s
 $resolver = Join-Path $repo 'scripts\Resolve-HdSkillConfig.ps1'
 $resolveArgs = @{ RepoRoot = $repo; NonInteractive = $NonInteractive }
 if ($VaultPath) { $resolveArgs.VaultPath = $VaultPath }
+if ($Agents) { $resolveArgs.Agents = $Agents }
 $resolved = (& $resolver @resolveArgs | ConvertFrom-Json -ErrorAction Stop)
 $profileRoot = [string]$resolved.detected.profileRoot
 $machineConfigPath = [string]$resolved.configPath
 $machineConfigDirectory = Split-Path -Parent $machineConfigPath
 $statePath = Join-Path $machineConfigDirectory 'install-state.json'
 $agentSpecs = @()
-if ($resolved.agents.codex) {
-    $agentSpecs += [pscustomobject]@{ name = 'codex'; skillsPath = (Join-Path $profileRoot '.agents\skills'); rulesPath = (Join-Path $profileRoot '.codex\AGENTS.md') }
-}
-if ($resolved.agents.antigravity) {
-    $agentSpecs += [pscustomobject]@{ name = 'antigravity'; skillsPath = (Join-Path $profileRoot '.gemini\config\skills'); rulesPath = (Join-Path $profileRoot '.gemini\config\GEMINI.md') }
+foreach ($entry in @($resolved.detected.registry)) {
+    if (-not $resolved.agents.([string]$entry.id)) { continue }
+    $agentSpecs += [pscustomobject]@{
+        name = [string]$entry.id
+        displayName = if ($entry.name) { [string]$entry.name } else { [string]$entry.id }
+        skillsPath = (Join-Path $profileRoot ([string]$entry.global.skillsPath))
+        rulesPath = if ($entry.global.rulesPath) { Join-Path $profileRoot ([string]$entry.global.rulesPath) } else { $null }
+        rulesSource = if ($entry.global.rulesSource) { Join-Path $repo ([string]$entry.global.rulesSource) } else { Join-Path $repo 'rules\AGENTS.md' }
+        mcp = [string]$entry.mcp
+    }
 }
 $warnings = @()
 foreach ($legacyPath in @($resolved.detected.antigravity.legacySkillsPath)) {
@@ -44,6 +51,12 @@ foreach ($toolName in @('git', 'node', 'npx', 'powershell7')) {
 if ($agentSpecs.Count -eq 0) { $warnings += 'No supported coding agent was detected; no skill target will be installed.' }
 if ($WithMcp -and $resolved.contextMode -ne 'vault') { throw 'WithMcp requires a readable configured Obsidian vault; native file access remains the default.' }
 if ($WithMcp -and (-not $resolved.detected.tools.node -or -not $resolved.detected.tools.npx)) { throw 'WithMcp requires node and npx. Install Node.js LTS manually, then retry.' }
+if ($WithMcp) {
+    foreach ($agent in $agentSpecs | Where-Object { -not $_.mcp }) {
+        $hint = if ($agent.name -eq 'claude') { " Run: claude mcp add --scope user hd-skill-filesystem -- cmd /c npx -y @modelcontextprotocol/server-filesystem@1.0.0 `"$($resolved.vaultPath)`"" } else { ' Add the filesystem MCP server in that agent''s own settings.' }
+        $warnings += "hd-skill does not write MCP config for $($agent.displayName).$hint"
+    }
+}
 
 function Get-FileHashHex([string] $Path) {
     $stream = [IO.File]::OpenRead($Path)
@@ -75,6 +88,18 @@ function Merge-MarkedBlock([string] $Existing, [string] $Block) {
     }
     $separator = if ([string]::IsNullOrEmpty($Existing) -or $Existing.EndsWith("`n") -or $Existing.EndsWith("`r")) { '' } else { [Environment]::NewLine }
     return $Existing + $separator + $Block.TrimEnd() + [Environment]::NewLine
+}
+function Remove-MarkedBlock([string] $Text, [bool] $OriginalEndedWithNewline) {
+    $begin = '# BEGIN hd-skill'
+    $end = '# END hd-skill'
+    $start = $Text.IndexOf($begin, [StringComparison]::Ordinal)
+    if ($start -lt 0) { return $Text }
+    $endStart = $Text.IndexOf($end, $start, [StringComparison]::Ordinal)
+    if ($endStart -lt 0) { throw 'Managed hd-skill block has no END marker; repair it before changing the agent selection.' }
+    $prefix = $Text.Substring(0, $start)
+    if (-not $OriginalEndedWithNewline) { $prefix = $prefix -replace '(?:\r\n|\n|\r)$', '' }
+    $suffix = $Text.Substring($endStart + $end.Length) -replace '^(?:\r\n|\n|\r)', ''
+    return $prefix + $suffix
 }
 function Get-ExistingText([string] $Path) {
     if (Test-Path -LiteralPath $Path -PathType Leaf) { return [IO.File]::ReadAllText($Path, [Text.Encoding]::UTF8) }
@@ -121,7 +146,8 @@ $sharedSourceFiles = @(
     (Join-Path $repo 'scripts\Resolve-HdSkillConfig.ps1'),
     (Join-Path $repo 'scripts\Detect-Environment.ps1'),
     (Join-Path $repo 'config.schema.json'),
-    (Join-Path $repo 'config.defaults.json')
+    (Join-Path $repo 'config.defaults.json'),
+    (Join-Path $repo 'agents.json')
 )
 $sharedState = @()
 foreach ($source in $sharedSourceFiles) {
@@ -135,7 +161,13 @@ foreach ($source in $sharedSourceFiles) {
     $sharedState += [pscustomobject]@{ source = $source; target = $target; hash = (Get-FileHashHex $source); existed = $sharedExisted }
 }
 
+$seenSkillRoots = @{}
+$seenRuleFiles = @{}
 foreach ($agent in $agentSpecs) {
+  # Several agents can read the same folder (for example ~\.agents\skills); install it once.
+  $sharedRoot = $seenSkillRoots.ContainsKey($agent.skillsPath.ToLowerInvariant())
+  $seenSkillRoots[$agent.skillsPath.ToLowerInvariant()] = $true
+  if (-not $sharedRoot) {
     $ancestor = $agent.skillsPath
     while ($ancestor -and $ancestor.TrimEnd('\') -ne $profileRoot.TrimEnd('\')) {
         if (-not (Test-Path -LiteralPath $ancestor -PathType Container) -and $ancestor -notin $createdDirectories) { $createdDirectories += $ancestor }
@@ -144,7 +176,7 @@ foreach ($agent in $agentSpecs) {
     foreach ($sourceDirectory in Get-ChildItem -LiteralPath (Join-Path $repo 'skills') -Directory | Sort-Object Name) {
         $source = $sourceDirectory.FullName
         $target = Join-Path $agent.skillsPath $sourceDirectory.Name
-        $prior = @($previousState.skills | Where-Object { $_.agent -eq $agent.name -and $_.target -eq $target } | Select-Object -First 1)
+        $prior = @($previousState.skills | Where-Object { $_.target -eq $target } | Select-Object -First 1)
         if (Test-Path -LiteralPath $target) {
             if (-not $prior) { throw "Refusing to replace an unmanaged skill at '$target'. Move it or choose a different user profile." }
             if ($Mode -eq 'Junction') {
@@ -178,17 +210,47 @@ foreach ($agent in $agentSpecs) {
         }
         $stateSkills += $targetInfo
     }
-    $ruleFile = if ($agent.name -eq 'codex') { Join-Path $repo 'rules\AGENTS.md' } else { Join-Path $repo 'rules\GEMINI.md' }
-    $ruleContent = (Get-Content -LiteralPath $ruleFile -Raw -Encoding UTF8).TrimEnd()
+  }
+    if (-not $agent.rulesPath -or $seenRuleFiles.ContainsKey($agent.rulesPath.ToLowerInvariant())) { continue }
+    $seenRuleFiles[$agent.rulesPath.ToLowerInvariant()] = $agent.rulesPath
+    $ruleContent = (Get-Content -LiteralPath $agent.rulesSource -Raw -Encoding UTF8).TrimEnd()
     $ruleBlock = "# BEGIN hd-skill`n$ruleContent`n# END hd-skill"
     $ruleBefore = Get-ExistingText $agent.rulesPath
     $ruleAfter = Merge-MarkedBlock $ruleBefore $ruleBlock
     if ($ruleAfter -cne $ruleBefore) { $configChanges.Add([pscustomobject]@{ kind = 'text'; path = $agent.rulesPath; before = $ruleBefore; after = $ruleAfter; existed = (Test-Path -LiteralPath $agent.rulesPath -PathType Leaf) }) }
 }
 
+# Skills and rule blocks of agents that are no longer selected.
+$retiredSkills = @()
+$currentTargets = @{}
+foreach ($entry in $stateSkills) { $currentTargets[([string]$entry.target).ToLowerInvariant()] = $true }
+if ($previousState) {
+    foreach ($prior in @($previousState.skills)) {
+        if ($currentTargets.ContainsKey(([string]$prior.target).ToLowerInvariant()) -or -not (Test-Path -LiteralPath $prior.target)) { continue }
+        if ($prior.mode -eq 'Junction') {
+            $item = Get-Item -LiteralPath $prior.target -Force
+            if (($item.Attributes -band [IO.FileAttributes]::ReparsePoint) -eq 0) { $warnings += "Preserving changed non-junction path of a deselected agent: $($prior.target)"; continue }
+            $retiredSkills += [pscustomobject]@{ mode = 'Junction'; target = $prior.target; files = @() }
+        }
+        else {
+            $matchingFiles = @($prior.files | Where-Object { $file = Join-Path $prior.target $_.path; (Test-Path -LiteralPath $file -PathType Leaf) -and (Get-FileHashHex $file) -eq $_.hash } | ForEach-Object { Join-Path $prior.target $_.path })
+            $retiredSkills += [pscustomobject]@{ mode = 'Copy'; target = $prior.target; files = $matchingFiles }
+        }
+    }
+    $priorRuleFiles = if ($previousState.PSObject.Properties.Name -contains 'ruleFiles') { @($previousState.ruleFiles) } else { @($previousState.globalFiles | Where-Object { $_.kind -eq 'text' -and $_.path -like '*.md' } | ForEach-Object { $_.path }) }
+    foreach ($rulePath in $priorRuleFiles) {
+        if (-not $rulePath -or $seenRuleFiles.ContainsKey(([string]$rulePath).ToLowerInvariant()) -or -not (Test-Path -LiteralPath $rulePath -PathType Leaf)) { continue }
+        $priorEntry = @($previousState.globalFiles | Where-Object { $_.path -eq $rulePath } | Select-Object -First 1)
+        $endedWithNewline = if ($priorEntry.Count -gt 0) { [bool]$priorEntry[0].originalEndedWithNewline } else { $true }
+        $before = Get-ExistingText $rulePath
+        $after = Remove-MarkedBlock $before $endedWithNewline
+        if ($after -cne $before) { $configChanges.Add([pscustomobject]@{ kind = 'text'; path = $rulePath; before = $before; after = $after; existed = $true }) }
+    }
+}
+
 $mcpChanges = @()
 if ($WithMcp) {
-    if ($resolved.agents.codex) {
+    if (@($agentSpecs | Where-Object { $_.mcp -eq 'codex-toml' }).Count -gt 0) {
         $tomlPath = Join-Path $profileRoot '.codex\config.toml'
         $template = Get-Content -LiteralPath (Join-Path $repo 'config\mcp-codex.toml.template') -Raw -Encoding UTF8
         $escapedVault = $resolved.vaultPath.Replace('\', '\\').Replace('"', '\"')
@@ -198,7 +260,7 @@ if ($WithMcp) {
         $after = Merge-MarkedBlock $before $block
         if ($after -cne $before) { $configChanges.Add([pscustomobject]@{ kind = 'text'; path = $tomlPath; before = $before; after = $after; existed = (Test-Path -LiteralPath $tomlPath -PathType Leaf) }) }
     }
-    if ($resolved.agents.antigravity) {
+    if (@($agentSpecs | Where-Object { $_.mcp -eq 'antigravity-json' }).Count -gt 0) {
         $jsonPath = Join-Path $profileRoot '.gemini\config\mcp_config.json'
         $before = Get-ExistingText $jsonPath
         $after = Get-McpJsonText $jsonPath $resolved.vaultPath
@@ -216,14 +278,16 @@ if ($previousState) { foreach ($entry in @($previousState.globalFiles)) { $globa
 foreach ($change in $configChanges | Where-Object { $_.path -ne $machineConfigPath }) {
     if (-not $globalFileMap.ContainsKey($change.path)) { $globalFileMap[$change.path] = [pscustomobject]@{ path = $change.path; kind = $change.kind; existed = $change.existed; originalEndedWithNewline = [bool]($change.before -match '(?:\r\n|\n|\r)$') } }
 }
-$state = [ordered]@{ version = 1; mode = $Mode; repositoryPath = $repo; skills = $stateSkills; createdDirectories = @($createdDirectories | Sort-Object Length -Descending -Unique); sharedFiles = $sharedState; globalFiles = @($globalFileMap.Values | Sort-Object path); machineConfigCreated = $machineConfigCreated; machineConfigHash = (Get-TextHashHex $machineConfigText) }
+$state = [ordered]@{ version = 1; mode = $Mode; repositoryPath = $repo; agents = @($agentSpecs | ForEach-Object { $_.name }); ruleFiles = @($seenRuleFiles.Values | Sort-Object); skills = $stateSkills; createdDirectories = @($createdDirectories | Select-Object -Unique | Sort-Object Length -Descending); sharedFiles = $sharedState; globalFiles = @($globalFileMap.Values | Sort-Object path); machineConfigCreated = $machineConfigCreated; machineConfigHash = (Get-TextHashHex $machineConfigText) }
 $stateText = ($state | ConvertTo-Json -Depth 20) + [Environment]::NewLine
 if ($stateText.Trim() -cne (Get-ExistingText $statePath).Trim()) { $configChanges.Add([pscustomobject]@{ kind = 'json'; path = $statePath; before = (Get-ExistingText $statePath); after = $stateText; existed = (Test-Path -LiteralPath $statePath -PathType Leaf) }) }
 
 Write-Host ("Resolved machine configuration (`"{0}`")" -f $machineConfigPath)
 $resolved.config | ConvertTo-Json -Depth 10 | Write-Host
 foreach ($warning in $warnings) { Write-Warning $warning }
+Write-Host ("Agents: {0}" -f $(if ($agentSpecs.Count -gt 0) { ($agentSpecs | ForEach-Object { '{0} ({1})' -f $_.displayName, $_.skillsPath }) -join '; ' } else { 'none' }))
 foreach ($change in $managedSkillChanges) { Write-Host ("[PLAN] {0}: {1} -> {2}" -f $change.action, $change.source, $change.target) }
+foreach ($retired in $retiredSkills) { Write-Host ("[PLAN] remove skill of deselected agent: {0}" -f $retired.target) }
 foreach ($change in $configChanges) { Write-Host ("[PLAN] update config: {0}" -f $change.path) }
 if ($WithMcp) { Write-Host '[PLAN] optional filesystem MCP is enabled with pinned package version 1.0.0 and the resolved vault only.' }
 if ($DryRun) {
@@ -255,6 +319,12 @@ foreach ($change in $managedSkillChanges) {
     }
     elseif ($change.action -eq 'create Junction skill') { New-Item -ItemType Junction -Path $change.target -Target $change.source | Out-Null }
     elseif ($change.action -eq 'create Copy skill') { Copy-Item -LiteralPath $change.source -Destination $change.target -Recurse -Force }
+}
+foreach ($retired in $retiredSkills) {
+    if ($retired.mode -eq 'Junction') { [IO.Directory]::Delete($retired.target, $false); continue }
+    foreach ($file in $retired.files) { Remove-Item -LiteralPath $file -Force }
+    foreach ($directory in @(Get-ChildItem -LiteralPath $retired.target -Directory -Recurse | Sort-Object FullName -Descending)) { if (@(Get-ChildItem -LiteralPath $directory.FullName -Force).Count -eq 0) { Remove-Item -LiteralPath $directory.FullName -Force } }
+    if (@(Get-ChildItem -LiteralPath $retired.target -Force).Count -eq 0) { Remove-Item -LiteralPath $retired.target -Force }
 }
 foreach ($change in $configChanges) { Write-Utf8NoBom $change.path $change.after }
 Write-Host ("[INSTALLED] mode={0}; agents={1}; backupRoot={2}" -f $Mode, (($agentSpecs | ForEach-Object { $_.name }) -join ', '), $backupRoot)

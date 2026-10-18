@@ -5,7 +5,7 @@ description: Command router for the hd-skill pack. Use only when the user types 
 
 # hd command router
 
-Antigravity invokes this skill as `/hd`; Codex invokes it as `$hd`. Everything after `hd` is the subcommand and its task text, for example `/hd debug login test fails` or `$hd review`.
+Antigravity, Claude Code, Cursor, Copilot and Gemini CLI invoke this skill as `/hd`; Codex invokes it as `$hd`. Everything after `hd` is the subcommand and its task text, for example `/hd debug login test fails` or `$hd review`.
 
 ## Procedure
 

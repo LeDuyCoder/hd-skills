@@ -13,12 +13,17 @@
     "contextMode": { "type": "string", "enum": ["vault", "repo"] },
     "agents": {
       "type": "object",
-      "required": ["codex", "antigravity"],
-      "additionalProperties": false,
+      "description": "Agent id -> install for it. Ids come from agents.json and the user's agents.custom.json.",
+      "additionalProperties": { "type": "boolean" },
       "properties": {
         "codex": { "type": "boolean" },
         "antigravity": { "type": "boolean" }
       }
+    },
+    "selectedAgents": {
+      "type": "array",
+      "description": "Agents the user chose explicitly; when absent, detected agents are used.",
+      "items": { "type": "string", "pattern": "^[a-z0-9][a-z0-9_-]{0,31}$" }
     },
     "machineId": { "type": "string", "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_-]{1,31}$" },
     "projects": {

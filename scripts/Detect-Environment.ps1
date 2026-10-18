@@ -26,6 +26,38 @@ if ($codexCommand) {
     catch { $codexVersion = $null }
 }
 
+# Agent registry: agents.json beside the tool root, then the user's agents.custom.json (same id replaces, new id appends).
+$registry = [System.Collections.Generic.List[object]]::new()
+$registrySources = @(
+    (Join-Path ([IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))) 'agents.json'),
+    (Join-Path $profileRoot '.hd-skill\agents.custom.json')
+)
+foreach ($registryPath in $registrySources) {
+    if (-not (Test-Path -LiteralPath $registryPath -PathType Leaf)) { continue }
+    try { $registryDocument = Get-Content -LiteralPath $registryPath -Raw -Encoding UTF8 | ConvertFrom-Json -ErrorAction Stop }
+    catch { Write-Warning "Unable to parse agent registry '$registryPath': $($_.Exception.Message)"; continue }
+    foreach ($entry in @($registryDocument.agents)) {
+        if (-not $entry -or [string]::IsNullOrWhiteSpace([string]$entry.id) -or [string]$entry.id -notmatch '^[a-z0-9][a-z0-9_-]{0,31}$') { Write-Warning "Skipping an agent without a valid lowercase id in '$registryPath'."; continue }
+        if (-not $entry.global -or [string]::IsNullOrWhiteSpace([string]$entry.global.skillsPath)) { Write-Warning "Skipping agent '$($entry.id)' in '$registryPath': global.skillsPath is required."; continue }
+        $existingIndex = -1
+        for ($i = 0; $i -lt $registry.Count; $i++) { if ($registry[$i].id -eq $entry.id) { $existingIndex = $i } }
+        if ($existingIndex -ge 0) { $registry[$existingIndex] = $entry } else { $registry.Add($entry) }
+    }
+}
+if ($registry.Count -eq 0) {
+    $registry.Add([pscustomobject]@{ id = 'codex'; name = 'OpenAI Codex'; detect = [pscustomobject]@{ paths = @('.codex'); commands = @('codex') }; global = [pscustomobject]@{ skillsPath = '.agents\skills'; rulesPath = '.codex\AGENTS.md'; rulesSource = 'rules\AGENTS.md' }; project = [pscustomobject]@{ skillsPath = '.agents\skills'; rulesPath = 'AGENTS.md' }; mcp = 'codex-toml'; invoke = '$hd' })
+    $registry.Add([pscustomobject]@{ id = 'antigravity'; name = 'Google Antigravity'; detect = [pscustomobject]@{ paths = @('.gemini'); commands = @() }; global = [pscustomobject]@{ skillsPath = '.gemini\config\skills'; rulesPath = '.gemini\config\GEMINI.md'; rulesSource = 'rules\GEMINI.md' }; project = [pscustomobject]@{ skillsPath = '.agents\skills'; rulesPath = 'AGENTS.md' }; mcp = 'antigravity-json'; invoke = '/hd' })
+}
+$agentDetection = [ordered]@{}
+foreach ($entry in $registry) {
+    $found = $false
+    foreach ($relative in @($entry.detect.paths)) { if ($relative -and (Test-Path -LiteralPath (Join-Path $profileRoot $relative))) { $found = $true } }
+    foreach ($commandName in @($entry.detect.commands)) { if ($commandName -and (Get-Command $commandName -ErrorAction SilentlyContinue)) { $found = $true } }
+    if ($entry.id -eq 'codex') { $found = $codexDetected }
+    if ($entry.id -eq 'antigravity') { $found = $antigravityDetected }
+    $agentDetection[[string]$entry.id] = $found
+}
+
 $vaults = @()
 $obsidianConfigPath = Join-Path $appDataRoot 'obsidian\obsidian.json'
 if (Test-Path -LiteralPath $obsidianConfigPath -PathType Leaf) {
@@ -78,6 +110,8 @@ if ([string]::IsNullOrWhiteSpace($machineId)) {
     repoRoot = [IO.Path]::GetFullPath($RepoRoot)
     codex = [pscustomobject]@{ installed = $codexDetected; home = $codexHome; skillsPath = $codexSkillsPath; mcpConfigPath = (Join-Path $codexHome 'config.toml'); command = if ($codexCommand) { $codexCommand.Source } else { $null }; version = $codexVersion }
     antigravity = [pscustomobject]@{ installed = $antigravityDetected; home = $geminiHome; skillsPath = $geminiSkillsPath; skillsDirectoryExists = (Test-Path -LiteralPath $geminiSkillsPath -PathType Container); existingSkillNames = if (Test-Path -LiteralPath $geminiSkillsPath -PathType Container) { @(Get-ChildItem -LiteralPath $geminiSkillsPath -Directory | ForEach-Object Name) } else { @() }; mcpConfigPath = $geminiMcpPath; mcpConfigured = (Test-Path -LiteralPath $geminiMcpPath -PathType Leaf); legacySkillsPath = (Join-Path $geminiHome 'antigravity\skills') }
+    registry = @($registry)
+    agents = [pscustomobject]$agentDetection
     obsidian = [pscustomobject]@{ configPath = $obsidianConfigPath; vaults = @($vaults) }
     tools = [pscustomobject]$tools
     missingToolGuidance = [pscustomobject]$missingToolGuidance

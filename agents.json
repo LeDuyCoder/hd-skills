@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 1,
+  "description": "Coding agents hd-skill can install into. Paths in 'global' are relative to %USERPROFILE%, paths in 'project' are relative to the project root. Add your own agents in %USERPROFILE%\\.hd-skill\\agents.custom.json using the same shape.",
+  "agents": [
+    {
+      "id": "codex",
+      "name": "OpenAI Codex",
+      "detect": { "paths": [".codex"], "commands": ["codex"] },
+      "global": { "skillsPath": ".agents\\skills", "rulesPath": ".codex\\AGENTS.md", "rulesSource": "rules\\AGENTS.md" },
+      "project": { "skillsPath": ".agents\\skills", "rulesPath": "AGENTS.md" },
+      "mcp": "codex-toml",
+      "invoke": "$hd"
+    },
+    {
+      "id": "antigravity",
+      "name": "Google Antigravity",
+      "detect": { "paths": [".gemini"], "commands": [] },
+      "global": { "skillsPath": ".gemini\\config\\skills", "rulesPath": ".gemini\\config\\GEMINI.md", "rulesSource": "rules\\GEMINI.md" },
+      "project": { "skillsPath": ".agents\\skills", "rulesPath": "AGENTS.md" },
+      "mcp": "antigravity-json",
+      "invoke": "/hd"
+    },
+    {
+      "id": "claude",
+      "name": "Claude Code",
+      "detect": { "paths": [".claude"], "commands": [] },
+      "global": { "skillsPath": ".claude\\skills", "rulesPath": ".claude\\CLAUDE.md", "rulesSource": "rules\\AGENTS.md" },
+      "project": { "skillsPath": ".claude\\skills", "rulesPath": "CLAUDE.md" },
+      "mcp": null,
+      "invoke": "/hd"
+    },
+    {
+      "id": "cursor",
+      "name": "Cursor",
+      "detect": { "paths": [".cursor"], "commands": [] },
+      "global": { "skillsPath": ".agents\\skills", "rulesPath": null, "rulesSource": "rules\\AGENTS.md" },
+      "project": { "skillsPath": ".agents\\skills", "rulesPath": "AGENTS.md" },
+      "mcp": null,
+      "invoke": "/hd"
+    },
+    {
+      "id": "copilot",
+      "name": "GitHub Copilot",
+      "detect": { "paths": [".copilot"], "commands": [] },
+      "global": { "skillsPath": ".agents\\skills", "rulesPath": ".copilot\\copilot-instructions.md", "rulesSource": "rules\\AGENTS.md" },
+      "project": { "skillsPath": ".agents\\skills", "rulesPath": "AGENTS.md" },
+      "mcp": null,
+      "invoke": "/hd"
+    },
+    {
+      "id": "gemini",
+      "name": "Gemini CLI",
+      "detect": { "paths": [".gemini\\settings.json"], "commands": [] },
+      "global": { "skillsPath": ".agents\\skills", "rulesPath": ".gemini\\GEMINI.md", "rulesSource": "rules\\GEMINI.md" },
+      "project": { "skillsPath": ".agents\\skills", "rulesPath": "AGENTS.md" },
+      "mcp": null,
+      "invoke": "/hd"
+    }
+  ]
+}

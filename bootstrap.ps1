@@ -3,6 +3,7 @@ param(
     [Parameter()] [string] $RepoRoot = $PSScriptRoot,
     [Parameter()] [string] $RepositoryUrl,
     [Parameter()] [string] $VaultPath,
+    [Parameter()] [string[]] $Agents,
     [Parameter()] [ValidateSet('Junction', 'Copy')] [string] $Mode = 'Junction',
     [Parameter()] [switch] $DryRun,
     [Parameter()] [switch] $NonInteractive,
@@ -32,6 +33,7 @@ if ($DryRun) {
     if ($installSource) {
         $installArgs = @{ RepoRoot = $installSource; Mode = $Mode; DryRun = $true; NonInteractive = $NonInteractive }
         if ($VaultPath) { $installArgs.VaultPath = $VaultPath }
+    if ($Agents) { $installArgs.Agents = $Agents }
         if ($WithMcp) { $installArgs.WithMcp = $true }
         $previousSkillHome = $env:HD_SKILL_HOME
         try {
@@ -76,6 +78,7 @@ if ($LASTEXITCODE -ne 0) { throw 'Repository validation failed after clone/pull.
 $env:HD_SKILL_HOME = $targetHome
 $installArgs = @{ RepoRoot = $targetHome; Mode = $Mode; Apply = $true; NonInteractive = $NonInteractive }
 if ($VaultPath) { $installArgs.VaultPath = $VaultPath }
+if ($Agents) { $installArgs.Agents = $Agents }
 if ($WithMcp) { $installArgs.WithMcp = $true }
 & $installScript @installArgs
 if ($LASTEXITCODE -ne 0) { throw 'Installation failed after repository update.' }
