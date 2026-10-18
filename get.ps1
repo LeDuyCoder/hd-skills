@@ -1,14 +1,14 @@
 # One-line entry point for hd-skill. Interactive:
-#   irm https://raw.githubusercontent.com/LeDuyCoder/hs-skills/master/get.ps1 | iex
+#   irm https://raw.githubusercontent.com/LeDuyCoder/hd-skills/master/get.ps1 | iex
 # With options:
-#   & ([scriptblock]::Create((irm https://raw.githubusercontent.com/LeDuyCoder/hs-skills/master/get.ps1))) -Scope Project -Agents claude,codex
+#   & ([scriptblock]::Create((irm https://raw.githubusercontent.com/LeDuyCoder/hd-skills/master/get.ps1))) -Scope Project -Agents claude,codex
 # This file runs inside the caller's session, so it never calls `exit` and keeps its settings in a child scope.
 param(
     [string] $Scope = $env:HD_SKILL_SCOPE,
     [string[]] $Agents,
     [string] $ProjectPath = (Get-Location).Path,
     [string] $VaultPath,
-    [string] $RepositoryUrl = 'https://github.com/LeDuyCoder/hs-skills.git',
+    [string] $RepositoryUrl = 'https://github.com/LeDuyCoder/hd-skills.git',
     [switch] $DryRun,
     [switch] $Uninstall,
     [switch] $NonInteractive,
@@ -91,7 +91,9 @@ param(
     $tempClone = $null
     if (Test-Path -LiteralPath $repoHome) {
         $origin = git -C $repoHome remote get-url origin
-        if ($LASTEXITCODE -ne 0 -or $origin.Trim() -ne $RepositoryUrl) { throw "The existing checkout at '$repoHome' does not use $RepositoryUrl; inspect it before continuing." }
+        # The repository was renamed from hs-skills; older checkouts still point at the old URL, which GitHub redirects.
+        $acceptedOrigins = @($RepositoryUrl, $RepositoryUrl.Replace('/hd-skills', '/hs-skills'))
+        if ($LASTEXITCODE -ne 0 -or $origin.Trim() -notin $acceptedOrigins) { throw "The existing checkout at '$repoHome' does not use $RepositoryUrl; inspect it before continuing." }
         $source = $repoHome
         if (-not $DryRun -and -not $Uninstall) {
             git -C $repoHome pull --ff-only --quiet
@@ -140,7 +142,7 @@ param(
         if (-not $Uninstall -and -not $DryRun) {
             Write-Host ''
             Write-Host 'Next: connect an Obsidian vault (optional):'
-            Write-Host '  irm https://raw.githubusercontent.com/LeDuyCoder/hs-skills/master/obsidian.ps1 | iex'
+            Write-Host '  irm https://raw.githubusercontent.com/LeDuyCoder/hd-skills/master/obsidian.ps1 | iex'
         }
     }
     finally {

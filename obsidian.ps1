@@ -1,12 +1,12 @@
 # Connects hd-skill to an Obsidian vault (the shared context store). Interactive:
-#   irm https://raw.githubusercontent.com/LeDuyCoder/hs-skills/master/obsidian.ps1 | iex
+#   irm https://raw.githubusercontent.com/LeDuyCoder/hd-skills/master/obsidian.ps1 | iex
 # With options:
-#   & ([scriptblock]::Create((irm https://raw.githubusercontent.com/LeDuyCoder/hs-skills/master/obsidian.ps1))) -VaultPath 'D:\Notes\DevBrain'
+#   & ([scriptblock]::Create((irm https://raw.githubusercontent.com/LeDuyCoder/hd-skills/master/obsidian.ps1))) -VaultPath 'D:\Notes\DevBrain'
 # From a checkout: & .\obsidian.ps1 [-VaultPath <path>] [-WithMcp] [-DryRun] [-NonInteractive]
 # Like get.ps1 it may run inside the caller's session, so it never calls `exit`.
 param(
     [string] $VaultPath,
-    [string] $RepositoryUrl = 'https://github.com/LeDuyCoder/hs-skills.git',
+    [string] $RepositoryUrl = 'https://github.com/LeDuyCoder/hd-skills.git',
     [switch] $WithMcp,
     [switch] $DryRun,
     [switch] $NonInteractive
